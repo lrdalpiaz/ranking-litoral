@@ -46,7 +46,7 @@ block content
           const groupDiv = document.createElement('div');
           groupDiv.className = 'col-md-6 col-lg-3 mb-3';
           
-          let options = allPlayers.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
+          let options = allPlayers.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
           
           groupDiv.innerHTML = `
             <label class="fw-bold small">Group ${i}</label>
