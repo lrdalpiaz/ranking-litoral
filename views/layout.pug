@@ -1,30 +1,122 @@
 doctype html
-html(lang="en")
+html(lang="pt-br")
   head
     meta(charset="UTF-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    title 🎾 Tênis Ranking Litoral - RS
+    title Ranking Tênis Litoral — Classic Clay
+    //- Bootstrap 5 & Icons
     link(rel="stylesheet" href="/stylesheets/bootstrap.min.css")
+    link(rel="stylesheet" href="https://jsdelivr.net")    
+    //- 2. AOS Animation CSS
+    link(href="https://unpkg.com" rel="stylesheet")
+    //- Fontes: Playfair Display para títulos (clássico) e Lato para corpo
+    link(href="https://googleapis.com" rel="stylesheet")
+    
     style.
-      .bg-tennis { background-color: #2c5e1a; } /* Verde Quadra */
-      .nav-link:hover { color: #ffd700 !important; } /* Destaque Ouro */
+      :root {
+        --clay-orange: #d35400; /* Laranja Saibro */
+        --clay-dark: #a04000;   /* Saibro Escuro */
+        --forest-green: #1b4d3e; /* Verde Roland Garros */
+        --cream-bg: #fdfaf5;    /* Creme Clássico */
+      }
+      
+      body {
+        font-family: 'Lato', sans-serif;
+        background-color: var(--cream-bg);
+        background-image: url('https://transparenttextures.com'); /* Textura leve de saibro */
+        color: var(--forest-green);
+        min-height: 100vh;
+      }
 
+      h1, h2, h3, .navbar-brand {
+        font-family: 'Playfair Display', serif;
+        font-weight: 900;
+      }
+
+      /* Navbar Elegante */
+      .navbar {
+        background-color: var(--forest-green) !important;
+        border-bottom: 4px solid var(--clay-orange);
+        padding: 0.8rem 0;
+      }
+      .navbar-brand { color: white !important; letter-spacing: 1px; }
+      .nav-link { color: rgba(255,255,255,0.9) !important; font-weight: 700; margin: 0 10px; text-transform: uppercase; font-size: 0.85rem; }
+      .nav-link:hover { color: var(--clay-orange) !important; }
+
+      /* Cards Estilo Clube */
+      .card {
+        background: white !important;
+        border: none;
+        border-radius: 4px; /* Menos arredondado, mais clássico */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border-top: 5px solid var(--clay-orange);
+      }
+      .card-header {
+        background: white !important;
+        border-bottom: 1px solid #eee;
+        color: var(--forest-green);
+        padding: 1.2rem;
+      }
+
+      /* Botões e Badges */
+      .btn-success {
+        background-color: var(--clay-orange);
+        border: none;
+        border-radius: 2px;
+        padding: 10px 25px;
+        text-transform: uppercase;
+        font-weight: 700;
+        transition: 0.3s;
+      }
+      .btn-success:hover {
+        background-color: var(--clay-dark);
+        transform: translateY(-1px);
+      }
+
+      .table thead {
+        background-color: var(--forest-green);
+        color: white;
+      }
+      .table-hover tbody tr:hover {
+        background-color: rgba(211, 84, 0, 0.05);
+      }
+
+      /* Badge de destaque */
+      .badge.bg-dark { background-color: var(--forest-green) !important; }
+      
   body
-    nav.navbar.navbar-expand-lg.navbar-dark.bg-tennis.shadow-sm.mb-4
+    nav.navbar.navbar-expand-lg.navbar-dark.sticky-top.mb-4.shadow
       .container
-        a.navbar-brand.fw-bold(href="/matches/ranking") 🎾  Ranking Litoral - RS
+        a.navbar-brand(href="/ranking") 
+          i.bi.bi-heptagon-fill.me-2
+
+          | LITORAL TENNIS CLUB
+        
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav")
           span.navbar-toggler-icon
+        
         #navbarNav.collapse.navbar-collapse
           ul.navbar-nav.ms-auto
             li.nav-item
-              a.nav-link(href="/matches/ranking") Classificação
+              a.nav-link(href="/ranking") 
+                i.bi.bi-trophy.me-1
+                | Ranking
             li.nav-item
-              a.nav-link(href="/matches/pending") Agenda de jogos
+              a.nav-link(href="/matches/pending") 
+                i.bi.bi-calendar3.me-1
+                | Agenda
             li.nav-item.ms-lg-3
-              a.btn.btn-warning.btn-sm.text-dark.fw-bold(href="/tournaments/new") + Nova Temporada
+              a.btn.btn-success(href="/tournaments/new") + New Tournament
 
-    //- O conteúdo de cada página entrará aqui
-    block content
+    main.pb-5
+      block content
 
+    footer.container.text-center.py-5.text-muted.small
+      p.mb-1 Litoral Tennis Tour — Rio Grande do Sul
+      p.text-uppercase(style="letter-spacing: 2px;") Grand Slam Tradition
+
+    script(src="https://unpkg.com")
+    script.
+      AOS.init({ duration: 800, once: true }); // Inicializa animações
+    
     script(src="/javascripts/bootstrap.bundle.min.js")
