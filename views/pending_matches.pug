@@ -1,0 +1,126 @@
+extends layout
+
+block content
+  .container.mt-4
+    h2.fw-bold.mb-4 📅 Agenda de jogos
+    
+    //- Mantém os filtros idênticos
+    .card.bg-light.mb-4.border-0.shadow-sm
+      .card-body
+        .row.g-3
+          .col-auto
+            span.small.text-muted.d-block Classe:
+            .btn-group.btn-group-sm
+              each c in ['A', 'B', 'C', 'D', 'E']
+                a.btn(href=`/matches/pending?class=${c}&group=${selectedGroup}` 
+                      class=(selectedClass == c ? 'btn-primary' : 'btn-outline-primary'))= c
+          .col-auto.ms-md-3
+            span.small.text-muted.d-block Grupo:
+            .btn-group.btn-group-sm
+              each g in [1, 2, 3, 4]
+                a.btn(href=`/matches/pending?class=${selectedClass}&group=${g}` 
+                      class=(selectedGroup == g ? 'btn-secondary' : 'btn-outline-secondary'))= g
+
+    if matches.length > 0
+      - var currentRound = 0
+      each match in matches
+        if match.round !== currentRound
+          - currentRound = match.round
+          .mt-5.mb-3
+            h4.text-success.border-bottom.pb-2
+
+              | Semana #{currentRound} 
+              small.text-muted.fs-6 (Data limite: #{match.deadline.toLocaleDateString('pt-BR')})
+        
+        .card.mb-2.shadow-sm(class=match.played ? 'bg-light opacity-75' : '')
+          .card-body.py-2
+            .row.align-items-center
+              .col-md-2.text-center
+                if match.played
+                  span.badge.bg-secondary FINALIZADO
+                else
+                  span.badge.bg-warning.text-dark PENDENTE
+              
+              .col-md-8
+                .row.text-center.align-items-center
+                  .col-4.fw-bold.fs-5= match.player1
+                  .col-4
+                    if match.played
+                      //- Exibe o Placar (Sets 1, 2 e Tiebreak se existir)
+                      .d-flex.justify-content-center.align-items-center.gap-2
+                        span.badge.bg-dark.fs-6= `${match.set1.p1}-${match.set1.p2}`
+                        span.badge.bg-dark.fs-6= `${match.set2.p1}-${match.set2.p2}`
+                        if match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
+                          span.badge.bg-danger.fs-6= `TB: ${match.set3.p1}-${match.set3.p2}`
+                    else
+                      span.text-muted vs
+                  .col-4.fw-bold.fs-5= match.player2
+              
+              .col-md-2.text-end
+                a.btn.btn-sm(href=`/matches/score/${match._id}` class=match.played ? 'btn-outline-secondary' : 'btn-success')
+                  = match.played ? 'Editar Placar' : 'Inserir Placar'
+    else
+      .text-center.py-5
+        p.text-muted Sem jogos agendados para esse grupo.
+
+
+//- extends layout
+
+//- block content
+//-   .container.mt-4
+//-     .d-flex.justify-content-between.align-items-center.mb-4
+//-       h2.fw-bold 📅 Schedule & 🎾 Pending Matches
+//-       //- Filtro simples por Classe (Opcional)
+//-       .dropdown
+//-         button#filterClass.btn.btn-outline-secondary.dropdown-toggle(type="button" data-bs-toggle="dropdown") Filter Class
+//-         ul.dropdown-menu
+//-           each c in ['A', 'B', 'C', 'D', 'E']
+//-             li: a.dropdown-item(href=`?class=${c}`) Class #{c}
+//-           li: hr.dropdown-divider
+//-           li: a.dropdown-item(href="/matches/pending") All Classes
+
+//-     if matches.length > 0
+//-       //- Lógica para agrupar por Rodada (Round)
+//-       - let currentRound = 0
+//-       each match in matches
+//-         if match.round !== currentRound
+//-           - currentRound = match.round
+//-           .row.mt-5.mb-3
+//-             .col-12.border-bottom.pb-2
+//-               h4.text-success.mb-0
+//-                 i.bi.bi-calendar-event.me-2
+
+//-                 | Week #{currentRound} 
+//-                 small.text-muted.fs-6 (Deadline: #{match.deadline.toLocaleDateString('pt-BR')})
+        
+//-         .card.mb-2.shadow-sm.border-start.border-4(class=match.played ? 'border-secondary' : 'border-success')
+//-           .card-body.py-3
+//-             .row.align-items-center
+//-               //- Info do Grupo e Classe
+//-               .col-md-2.text-center.border-end
+//-                 span.badge.bg-dark.d-block.mb-1= `Class ${match.className}`
+//-                 span.badge.bg-outline-dark.text-dark= `Group ${match.groupNumber}`
+              
+//-               //- Confronto
+//-               .col-md-8
+//-                 .row.text-center.align-items-center
+//-                   .col-5.text-end
+//-                     span.fs-5.fw-bold= match.player1
+//-                   .col-2
+//-                     span.badge.bg-light.text-dark.rounded-pill VS
+//-                   .col-5.text-start
+//-                     span.fs-5.fw-bold= match.player2
+              
+//-               //- Ação
+//-               .col-md-2.text-end
+//-                 if !match.played
+//-                   a.btn.btn-success.w-100(href=`/matches/score/${match._id}`)
+//-                     i.bi.bi-pencil-square.me-1
+//-                     | Score
+//-                 else
+//-                   span.badge.bg-secondary.w-100 DONE
+//-     else
+//-       .text-center.py-5
+//-         i.bi.bi-check2-circle.display-1.text-muted
+//-         p.lead.mt-3 No pending matches found. Everything is up to date!
+//-         a.btn.btn-primary(href="/ranking") View Leaderboard

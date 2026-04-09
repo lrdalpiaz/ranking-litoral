@@ -1,0 +1,60 @@
+extends layout
+
+block content
+  .container.mt-4
+    h2.fw-bold.mb-4 🏆 Criar nova temporada
+    form(action="/tournaments/create" method="POST")
+      .card.shadow-sm.mb-4
+        .card-body
+          .row
+            .col-md-6.mb-3
+              label.form-label Nome
+              input.form-control(name="name" placeholder="Ex: 2026-1" required)
+            .col-md-6.mb-3
+              label.form-label Data de início
+              input.form-control(type="date" name="startDate" required)
+
+      each cls in ['A', 'B', 'C', 'D', 'E']
+        .card.mb-4.border-primary
+          .card-header.bg-primary.text-white.d-flex.justify-content-between.align-items-center
+            span.fw-bold Classe #{cls}
+            div.d-flex.align-items-center
+              label.me-2.small Número de grupos:
+              input.form-control.form-control-sm(type="number" name=`groupsCount_${cls}` min="0" max="8" value="0" style="width: 70px;" onchange=`updateGroups('${cls}', this.value)`)
+          
+          //- Este contêiner será preenchido pelo JavaScript abaixo
+          .card-body
+            .row(id=`groups-container-${cls}`)
+              .col-12.text-muted.small Sem grupos definidos para esse classe
+
+      button.btn.btn-success.btn-lg.w-100.my-4(type="submit") Gerar grupos e partidas
+
+    //- Script para gerar os grupos dinamicamente
+    script.
+      const allPlayers = !{JSON.stringify(players)}; // Passa a lista de jogadores do Node para o JS
+
+      function updateGroups(cls, count) {
+        const container = document.getElementById(`groups-container-${cls}`);
+        container.innerHTML = ''; // Limpa o atual
+
+        if (count == 0) {
+          container.innerHTML = '<div class="col-12 text-muted small">No groups defined for this class.</div>';
+          return;
+        }
+
+        for (let i = 1; i <= count; i++) {
+          const groupDiv = document.createElement('div');
+          groupDiv.className = 'col-md-6 col-lg-3 mb-3';
+          
+          let options = allPlayers.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
+          
+          groupDiv.innerHTML = `
+            <label class="fw-bold small">Group ${i}</label>
+            <select name="players_${cls}_${i}" class="form-select form-select-sm" multiple size="6" required>
+              ${options}
+            </select>
+            <small class="text-muted d-block" style="font-size: 0.7rem;">Hold Ctrl to select players</small>
+          `;
+          container.appendChild(groupDiv);
+        }
+      }

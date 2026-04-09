@@ -1,0 +1,61 @@
+doctype html
+html(lang="pt-br")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Ranking de Tênis - Litoral RS
+    // Bootstrap 5
+    link(href="/stylesheets/bootstrap.min.css" rel="stylesheet")
+    // Google Fonts
+    link(href="https://googleapis.com" rel="stylesheet")
+    style.
+      body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; }
+      .navbar-brand, h1, h2 { font-family: 'Oswald', sans-serif; text-transform: uppercase; }
+      .bg-tennis { background-color: #2c5e1a; } /* Verde Tênis */
+      .card-ranking { border-left: 5px solid #e66b27; } /* Laranja Saibro */
+      .hero-section { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://unsplash.com'); background-size: cover; color: white; padding: 60px 0; }
+
+  body
+    nav.navbar.navbar-expand-lg.navbar-dark.bg-tennis.mb-4
+      .container
+        a.navbar-brand(href="#") 🎾 Ranking Litoral RS
+    
+    header.hero-section.text-center.mb-5
+      .container
+        h1.display-4 Ranking Oficial de Tênis
+        p.lead Disputas acirradas nas praias do Rio Grande do Sul
+
+    main.container
+      .row.justify-content-center
+        .col-md-10
+          .card.shadow-sm.mb-4
+            .card-header.bg-white.py-3
+              h2.h5.mb-0.text-primary Lista de Atletas / Usuários
+            .card-body
+              if users.length > 0
+                .table-responsive
+                  table.table.table-hover.align-middle
+                    thead.table-light
+                      tr
+                        th Atleta
+                        th Contato
+                        th.text-center Ações
+                    tbody
+                      each user in users
+                        tr
+                          td
+                            strong= user.name
+                          td= user.email
+                          td.text-center
+                            button.btn.btn-sm.btn-outline-success Ver Perfil
+              else
+                .text-center.py-5
+                  p.text-muted Nenhum atleta cadastrado no momento.
+          
+          .text-center
+            a.btn.btn-primary.btn-lg(href="/") 🏠 Voltar para o Início
+
+    footer.mt-5.py-4.bg-light.text-center.text-muted
+      p © 2024 Ranking de Tênis Litoral RS - Capão da Canoa, Torres e Região.
+    
+    script(src="/stylesheets/bootstrap.min.css")

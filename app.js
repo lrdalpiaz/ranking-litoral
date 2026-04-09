@@ -9,8 +9,14 @@ require('dotenv').config();
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-
+var matchesRouter = require('./routes/matches');
+var tournamentsRouter = require('./routes/tournaments');
 var app = express();
+
+const mongoURI = process.env.MONGODB_URI || "mongodb+srv://lrdalpiaz:jp9N3bnaeTg4cr6c@cluster0.lgxrw0w.mongodb.net/sample_mflix?appName=Cluster0";
+mongoose.connect(mongoURI)
+  .then(() => console.log("✅ Conectado ao MongoDB Atlas com sucesso!"))
+  .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -24,25 +30,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
-const mongoURI = process.env.MONGODB_URI;
-
-// 2. Função de Conexão
-mongoose.connect(mongoURI)
-  .then(() => console.log("✅ Conectado ao MongoDB Atlas com sucesso!"))
-  .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err));
-
-// 3. Exemplo de Rota de Leitura
-const User = mongoose.model('user', new mongoose.Schema({ name: String, email: String }));
-
-app.get('/usuarios', async (req, res) => {
-  try {
-    const usuarios = await User.find();
-    res.json(usuarios);
-  } catch (error) {
-    res.status(500).send("Erro ao buscar dados.");
-  }
-});
+app.use('/matches', matchesRouter);
+app.use('/tournaments', tournamentsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

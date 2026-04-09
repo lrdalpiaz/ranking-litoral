@@ -1,0 +1,110 @@
+extends layout
+
+block content
+  .container.mt-4
+    .row.justify-content-center
+      .col-md-8
+        .card.shadow.border-0.mb-4
+          .card-header.bg-tennis.text-white.text-center.py-3
+            h4.mb-0.fw-bold 🎾 #{match.played ? 'Edit Match Score' : 'Enter Match Score'}
+            small.text-uppercase= `Class ${match.className} — Group ${match.groupNumber} — Week ${match.round}`
+
+          .card-body.bg-light.py-4
+            //- Rota POST para salvar/atualizar
+            form(action=`/matches/update/${match._id}` method="POST")
+              input(type="hidden" name="class" value=match.className)
+              input(type="hidden" name="group" value=match.groupNumber)
+              //- Cabeçalho do Placar
+              .row.align-items-center.text-center.mb-5
+                .col-5
+                  h3.fw-bold.text-primary.mb-1= match.player1
+                  span.badge.bg-dark Player 1
+                .col-2
+                  span.display-6.text-muted vs
+                .col-5
+                  h3.fw-bold.text-primary.mb-1= match.player2
+                  span.badge.bg-dark Player 2
+
+              //- Grid de Sets
+              .row.g-4
+                //- SET 1
+                .col-md-4
+                  .card.border-0.shadow-sm
+                    .card-body.text-center
+                      label.form-label.fw-bold.text-success Set 1
+                      .input-group
+                        input.form-control.form-control-lg.text-center(
+                          name="s1p1" 
+                          type="number" 
+                          min="0" 
+                          value=(match.set1 && match.set1.p1 !== undefined ? match.set1.p1 : "") 
+                          required
+                        )
+                        span.input-group-text :
+                        input.form-control.form-control-lg.text-center(
+                          name="s1p2" 
+                          type="number" 
+                          min="0" 
+                          value=(match.set1 && match.set1.p2 !== undefined ? match.set1.p2 : "") 
+                          required
+                        )
+                
+                //- SET 2
+                .col-md-4
+                  .card.border-0.shadow-sm
+                    .card-body.text-center
+                      label.form-label.fw-bold.text-success Set 2
+                      .input-group
+                        input.form-control.form-control-lg.text-center(
+                          name="s2p1" 
+                          type="number" 
+                          min="0" 
+                          value=(match.set2 && match.set2.p1 !== undefined ? match.set2.p1 : "") 
+                          required
+                        )
+                        span.input-group-text :
+                        input.form-control.form-control-lg.text-center(
+                          name="s2p2" 
+                          type="number" 
+                          min="0" 
+                          value=(match.set2 && match.set2.p2 !== undefined ? match.set2.p2 : "") 
+                          required
+                        )
+                
+                //- SUPER TIEBREAK (Set 3)
+                .col-md-4
+                  .card.border-0.shadow-sm.bg-warning.bg-opacity-10
+                    .card-body.text-center
+                      label.form-label.fw-bold.text-danger Super Tiebreak
+                      .input-group
+                        input.form-control.form-control-lg.text-center(
+                          name="s3p1" 
+                          type="number" 
+                          min="0" 
+                          value=(match.set3 && match.set3.p1 !== undefined ? match.set3.p1 : "")
+                        )
+                        span.input-group-text :
+                        input.form-control.form-control-lg.text-center(
+                          name="s3p2" 
+                          type="number" 
+                          min="0" 
+                          value=(match.set3 && match.set3.p2 !== undefined ? match.set3.p2 : "")
+                        )
+                      small.text-muted.mt-2 (Only if 1-1 in sets)
+
+              //- Ações do Formulário
+              .d-grid.gap-2.mt-5
+                button.btn.btn-success.btn-lg.fw-bold(type="submit") 
+                  i.bi.bi-save.me-2
+
+                  | Save Result
+                a.btn.btn-outline-secondary(href=`/matches/pending?class=${match.className}&group=${match.groupNumber}`) 
+                  i.bi.bi-arrow-left-circle.me-2
+                  | Cancel
+
+    .row.justify-content-center.mt-2
+      .col-md-8.text-center
+        .p-2.bg-white.rounded.border.small.text-muted
+          strong Rule: 
+
+          | 2-0 (3pts) | 2-1 (2pts/1pt). Tiebreak adds 1 set to stats and 1 game to balance.
