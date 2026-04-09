@@ -25,7 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-const mongoURI = process.env.MONGODB_URI || "mongodb+srv://lrdalpiaz:jp9N3bnaeTg4cr6c@cluster0.lgxrw0w.mongodb.net/sample_mflix?appName=Cluster0";
+const mongoURI = process.env.MONGODB_URI;
 
 // 2. Função de Conexão
 mongoose.connect(mongoURI)
