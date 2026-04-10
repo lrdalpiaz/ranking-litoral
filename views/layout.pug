@@ -104,7 +104,7 @@ html(lang="pt-br")
           span.navbar-toggler-icon
         
         #navbarNav.collapse.navbar-collapse
-          ul.navbar-nav.ms-auto
+          ul.navbar-nav.ms-auto.align-items-center
             li.nav-item
               a.nav-link(href="/matches/ranking") 
                 i.bi.bi-trophy.me-1
@@ -118,9 +118,11 @@ html(lang="pt-br")
                 li.nav-item
                   a.btn.btn-success.btn-sm(href="/tournaments/new") + Nova Temporada
               li.nav-item
-                span.nav-link.text-white Olá, #{user.name}
-                a.nav-link(href="/logout") Logout
-              li.nav-item
+                span.nav-link.text-white.small.d-none.d-xl-inline Olá, #{user.name}
+              li.nav-item.ms-lg-2
+                a.btn.btn-sm.btn-outline-light.rounded-pill(href="/logout" style="white-space: nowrap;") 
+                  i.bi.bi-box-arrow-right.me-1
+                  | Logout
             else
               li.nav-item
                 a.nav-link(href="/login") Login

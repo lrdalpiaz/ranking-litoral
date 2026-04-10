@@ -54,7 +54,58 @@ block content
             .row(id=`groups-container-${cls}`)
               .col-12.text-muted.small Nenhum grupo definido para esta classe.
 
-      button.btn.btn-success.btn-lg.w-100.my-4(type="submit") Gerar Torneio
+      button#btnGenerate.btn.btn-success.btn-lg.w-100.my-4(type="button" onclick="submitTournament()") 
+        i.bi.bi-gear-fill.me-2
+      
+        | Gerar Torneio
+      
+      script.
+        async function submitTournament() {
+          const btn = document.getElementById('btnGenerate');
+          const form = document.querySelector('form');
+          const formData = new FormData(form);
+          
+          // Converte FormData para um objeto simples
+          const data = {};
+          formData.forEach((value, key) => {
+            if (!data[key]) { data[key] = value; return; }
+            if (!Array.isArray(data[key])) { data[key] = [data[key]]; }
+            data[key].push(value);
+          });
+      
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processando...';
+      
+          try {
+            const response = await fetch('/tournaments/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+      
+            const result = await response.json();
+      
+            if (response.ok && result.success) {
+              // Sucesso: Redireciona
+              window.location.href = '/matches/pending';
+            } else {
+              // Erro: Mostra o Toast sem recarregar a página
+              showToast(result.error || 'Erro ao processar dados do torneio.');
+            }
+          } catch (err) {
+            showToast('Erro de conexão com o servidor.');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-gear-fill me-2"></i> Gerar Torneio';
+          }
+        }
+      
+        function showToast(message) {
+          document.getElementById('errorMessage').innerText = message;
+          const toastEl = document.getElementById('errorToast');
+          const toast = new bootstrap.Toast(toastEl);
+          toast.show();
+        }
 
     script.
       // Passa a lista de jogadores do banco para o JavaScript
@@ -74,11 +125,11 @@ block content
           groupDiv.className = 'col-md-6 mb-4';
           
           const selectId = `select-${cls}-${i}`;
-          let options = allPlayers.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+          let options = allPlayers.map(p => `<option value="${p.email}">${p.name}</option>`).join('');
           
           groupDiv.innerHTML = `
             <label class="fw-bold small mb-1">Grupo ${i}</label>
-            <select id="${selectId}" name="players_${cls}_${i}" multiple placeholder="Digite o nome do jogador..." autocomplete="off">
+            <select id="${selectId}" name="players_${cls}_${i}" multiple placeholder="Busque pelo nome...">
               ${options}
             </select>
           `;
@@ -89,7 +140,21 @@ block content
             plugins: ['remove_button'],
             maxItems: 12,
             persist: false,
-            create: false
+            create: false,
+            allowEmptyOption: true,
+            // ESTA É A MÁGICA:
+            onItemAdd: function() {
+              this.setTextboxValue(''); // Limpa o texto digitado
+              this.refreshOptions();    // Reseta a lista de sugestões para o estado inicial
+            }
           });
         }
       }
+  //- Container para o Toast (Canto superior direito)
+  .toast-container.position-fixed.top-0.end-0.p-3(style="z-index: 1055")
+    #errorToast.toast.align-items-center.text-white.bg-danger.border-0(role="alert" aria-live="assertive" aria-atomic="true")
+      .d-flex
+        .toast-body
+          i.bi.bi-exclamation-triangle.me-2
+          span#errorMessage Erro ao gerar torneio.
+        button.btn-close.btn-close-white.me-2.m-auto(type="button" data-bs-dismiss="toast")

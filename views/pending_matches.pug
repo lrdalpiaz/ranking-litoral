@@ -14,8 +14,15 @@ block content
           //- Tournament
           .col-md-4
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Tournament
-            select.form-select.form-select-sm.border-success(style="height: 38px;" onchange="...")
-              //- options...
+            select.form-select.form-select-sm.border-success(
+              style="height: 38px;" 
+              onchange=`location.href='/matches/pending?tournamentId=' + this.value + '&class=${selectedClass}&group=${selectedGroup}'`
+            )
+              if tournaments && tournaments.length > 0
+                each t in tournaments
+                  option(value=t._id.toString() selected=(t._id.toString() === selectedTournament)) #{t.name}
+              else
+                option(disabled) No tournaments found
         
           //- Class
           .col-md-4
