@@ -41,16 +41,18 @@ router.get('/score/:id', async (req, res) => {
 });
 
 router.post('/update/:id', async (req, res) => {
-    const { s1p1, s1p2, s2p1, s2p2, s3p1, s3p2, class: qClass, group: qGroup } = req.body;
-
-    await Match.findByIdAndUpdate(req.params.id, {
-        set1: { p1: Number(s1p1), p2: Number(s1p2) },
-        set2: { p1: Number(s2p1), p2: Number(s2p2) },
-        set3: { p1: Number(s3p1) || 0, p2: Number(s3p2) || 0 },
-        played: true
-    });
-    // Redireciona mantendo os filtros originais na URL
-    res.redirect(`/matches/pending?class=${qClass}&group=${qGroup}`);
+    try {
+        const { s1p1, s1p2, s2p1, s2p2, s3p1, s3p2 } = req.body;
+        await Match.findByIdAndUpdate(req.params.id, {
+            set1: { p1: Number(s1p1), p2: Number(s1p2) },
+            set2: { p1: Number(s2p1), p2: Number(s2p2) },
+            set3: { p1: Number(s3p1) || 0, p2: Number(s3p2) || 0 },
+            played: true
+        });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 

@@ -1,67 +1,226 @@
 extends layout
 
 block content
-  .container.mt-4
-    h2.fw-bold.mb-4 📅 Agenda de jogos
-    
-    //- Mantém os filtros idênticos
-    .card.bg-light.mb-4.border-0.shadow-sm
-      .card-body
-        .row.g-3
-          .col-auto
-            span.small.text-muted.d-block Classe:
-            .btn-group.btn-group-sm
-              each c in ['A', 'B', 'C', 'D', 'E']
-                a.btn(href=`/matches/pending?class=${c}&group=${selectedGroup}` 
-                      class=(selectedClass == c ? 'btn-primary' : 'btn-outline-primary'))= c
-          .col-auto.ms-md-3
-            span.small.text-muted.d-block Grupo:
-            .btn-group.btn-group-sm
-              each g in [1, 2, 3, 4]
-                a.btn(href=`/matches/pending?class=${selectedClass}&group=${g}` 
-                      class=(selectedGroup == g ? 'btn-secondary' : 'btn-outline-secondary'))= g
+  .container.mt-4#main-container(data-class=selectedClass data-group=selectedGroup)
+    .d-flex.justify-content-between.align-items-center.mb-4(data-aos="fade-down")
+      h2.fw-bold.text-uppercase 📅 Tournament Schedule
+      if selectedClass || selectedGroup
+        a.btn.btn-sm.btn-outline-danger.rounded-0(href="/matches/pending") Reset Filters
 
+    //- Filtros Persistentes
+    .card.mb-4.border-0.shadow-sm(data-aos="fade-down")
+      .card-body.bg-white
+        .row.g-3.align-items-center
+          .col-auto
+            span.small.text-muted.text-uppercase.fw-bold.d-block Class
+            .btn-group
+              each c in ['A', 'B', 'C', 'D', 'E']
+                a.btn.btn-sm(href=`/matches/pending?class=${c}&group=${selectedGroup}` 
+                      class=(selectedClass == c ? 'btn-success' : 'btn-outline-success'))= c
+          .col-auto.ms-md-4
+            span.small.text-muted.text-uppercase.fw-bold.d-block Group
+            .btn-group
+              each g in [1, 2, 3, 4]
+                a.btn.btn-sm(href=`/matches/pending?class=${selectedClass}&group=${g}` 
+                      class=(selectedGroup == g ? 'btn-dark' : 'btn-outline-dark'))= g
+
+    //- Listagem de Jogos
     if matches.length > 0
       - var currentRound = 0
-      each match in matches
+      each match, index in matches
         if match.round !== currentRound
           - currentRound = match.round
-          .mt-5.mb-3
-            h4.text-success.border-bottom.pb-2
+          .mt-5.mb-3(data-aos="fade-right")
+            h4.text-uppercase.fw-900(style="color: var(--clay-orange); border-left: 4px solid var(--clay-orange); padding-left: 15px;")
 
-              | Semana #{currentRound} 
-              small.text-muted.fs-6 (Data limite: #{match.deadline.toLocaleDateString('pt-BR')})
+              | Week #{currentRound} 
+              small.text-muted.fs-6.ms-2 — Deadline: #{match.deadline.toLocaleDateString('pt-BR')}
         
-        .card.mb-2.shadow-sm(class=match.played ? 'bg-light opacity-75' : '')
-          .card-body.py-2
+        .card.mb-2.border-0.shadow-sm(data-aos="fade-up" data-aos-delay=(index % 5) * 50)
+          .card-body.py-3(id=`match-row-${match._id}` class=match.played ? 'bg-light' : '')
+            //- Dentro do card-body do loop de matches
             .row.align-items-center
-              .col-md-2.text-center
-                if match.played
-                  span.badge.bg-secondary FINALIZADO
-                else
-                  span.badge.bg-warning.text-dark PENDENTE
-              
+              //- Status (Aumente para col-md-1 se necessário)
+              .col-md-2.text-center.border-end
+                span.badge.rounded-pill(id=`status-${match._id}` class=match.played ? 'bg-secondary' : 'bg-warning text-dark')
+                  = match.played ? 'COMPLETED' : 'PENDING'
+            
+              //- Confronto (Ajustado para col-md-8 para dar mais espaço ao centro)
               .col-md-8
-                .row.text-center.align-items-center
-                  .col-4.fw-bold.fs-5= match.player1
-                  .col-4
+                .row.align-items-center.text-center
+                  .col-3.text-end
+                    span.fw-bold.small.d-block= match.player1
+                  
+                  //- Container do Placar (Damos mais espaço aqui: col-6)
+                  .col-6(id=`score-container-${match._id}`)
                     if match.played
-                      //- Exibe o Placar (Sets 1, 2 e Tiebreak se existir)
-                      .d-flex.justify-content-center.align-items-center.gap-2
-                        span.badge.bg-dark.fs-6= `${match.set1.p1}-${match.set1.p2}`
-                        span.badge.bg-dark.fs-6= `${match.set2.p1}-${match.set2.p2}`
+                      .d-flex.justify-content-center.gap-1
+                        span.badge.bg-dark= `${match.set1.p1}-${match.set1.p2}`
+                        span.badge.bg-dark= `${match.set2.p1}-${match.set2.p2}`
                         if match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
-                          span.badge.bg-danger.fs-6= `TB: ${match.set3.p1}-${match.set3.p2}`
+                          span.badge.bg-danger= `TB:${match.set3.p1}-${match.set3.p2}`
                     else
-                      span.text-muted vs
-                  .col-4.fw-bold.fs-5= match.player2
+                      span.text-muted.small VS
+                  
+                  .col-3.text-start
+                    span.fw-bold.small.d-block= match.player2
               
-              .col-md-2.text-end
-                a.btn.btn-sm(href=`/matches/score/${match._id}` class=match.played ? 'btn-outline-secondary' : 'btn-success')
-                  = match.played ? 'Editar Placar' : 'Inserir Placar'
+              //- Ação
+              .col-md-2.text-end(id=`action-container-${match._id}`)
+                //- (Botão de edit/score que já tínhamos)
+                button.btn.btn-sm.w-100(
+                  class=match.played ? 'btn-outline-secondary' : 'btn-success'
+                  onclick=`enableInlineEdit('${match._id}', ${JSON.stringify(match)})`
+                )
+                  i.bi.bi-pencil-square.me-1
+                  span= match.played ? 'Edit' : 'Score'
+
     else
       .text-center.py-5
-        p.text-muted Sem jogos agendados para esse grupo.
+        p.text-muted No matches for this selection.
+
+  //- SCRIPT PARA EDIÇÃO IN-LINE
+  script.
+    function enableInlineEdit(id, match) {
+      const scoreContainer = document.getElementById(`score-container-${id}`);
+      const actionContainer = document.getElementById(`action-container-${id}`);
+  
+      scoreContainer.innerHTML = `
+        <div class="d-flex justify-content-center align-items-end gap-2 flex-wrap">
+          <div class="text-center">
+            <small class="d-block text-muted" style="font-size: 0.65rem;">SET 1</small>
+            <div class="d-flex gap-1">
+              <input type="number" id="s1p1-${id}" class="form-control form-control-sm text-center" style="width:50px; height:35px;" value="${match.set1?.p1 ?? ''}">
+              <input type="number" id="s1p2-${id}" class="form-control form-control-sm text-center" style="width:50px; height:35px;" value="${match.set1?.p2 ?? ''}">
+            </div>
+          </div>
+          <div class="text-center">
+            <small class="d-block text-muted" style="font-size: 0.65rem;">SET 2</small>
+            <div class="d-flex gap-1">
+              <input type="number" id="s2p1-${id}" class="form-control form-control-sm text-center" style="width:50px; height:35px;" value="${match.set2?.p1 ?? ''}">
+              <input type="number" id="s2p2-${id}" class="form-control form-control-sm text-center" style="width:50px; height:35px;" value="${match.set2?.p2 ?? ''}">
+            </div>
+          </div>
+          <div class="text-center bg-warning bg-opacity-10 px-1 rounded">
+            <small class="d-block text-danger fw-bold" style="font-size: 0.65rem;">TIE-BREAKÃO</small>
+            <div class="d-flex gap-1">
+              <input type="number" id="s3p1-${id}" class="form-control form-control-sm text-center border-danger" style="width:50px; height:35px;" value="${match.set3?.p1 ?? ''}">
+              <input type="number" id="s3p2-${id}" class="form-control form-control-sm text-center border-danger" style="width:50px; height:35px;" value="${match.set3?.p2 ?? ''}">
+            </div>
+          </div>
+        </div>
+      `;
+  
+      actionContainer.innerHTML = `
+        <div class="d-flex flex-column gap-1">
+          <button class="btn btn-sm btn-primary w-100" onclick="saveInline('${id}')">
+            <i class="bi bi-check-circle"></i> SALVAR
+          </button>
+          <button class="btn btn-sm btn-outline-secondary w-100" onclick="window.location.reload()">
+            <i class="bi bi-x-circle"></i> CANCELAR
+          </button>
+        </div>
+      `;
+    }
+  
+    async function saveInline(id) {
+      // 1. Pega os filtros direto da URL atual do navegador
+      const urlParams = new URLSearchParams(window.location.search);
+      const currentClass = urlParams.get('class') || 'A';
+      const currentGroup = urlParams.get('group') || '1';
+  
+      // 2. Coleta os dados dos inputs
+      const data = {
+        s1p1: document.getElementById(`s1p1-${id}`).value,
+        s1p2: document.getElementById(`s1p2-${id}`).value,
+        s2p1: document.getElementById(`s2p1-${id}`).value,
+        s2p2: document.getElementById(`s2p2-${id}`).value,
+        s3p1: document.getElementById(`s3p1-${id}`).value || 0,
+        s3p2: document.getElementById(`s3p2-${id}`).value || 0,
+      };
+  
+      try {
+        const response = await fetch(`/matches/update/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          // 3. Redireciona forçando os valores capturados da URL
+          window.location.href = `/matches/pending?class=${currentClass}&group=${currentGroup}`;
+        } else {
+          alert("Erro ao salvar os dados.");
+        }
+      } catch (err) {
+        alert("Erro de comunicação com o servidor.");
+      }
+    }
+
+//- extends layout
+
+//- block content
+//-   .container.mt-4
+//-     h2.fw-bold.mb-4 📅 Agenda de jogos
+    
+//-     //- Mantém os filtros idênticos
+//-     .card.bg-light.mb-4.border-0.shadow-sm
+//-       .card-body
+//-         .row.g-3
+//-           .col-auto
+//-             span.small.text-muted.d-block Classe:
+//-             .btn-group.btn-group-sm
+//-               each c in ['A', 'B', 'C', 'D', 'E']
+//-                 a.btn(href=`/matches/pending?class=${c}&group=${selectedGroup}` 
+//-                       class=(selectedClass == c ? 'btn-primary' : 'btn-outline-primary'))= c
+//-           .col-auto.ms-md-3
+//-             span.small.text-muted.d-block Grupo:
+//-             .btn-group.btn-group-sm
+//-               each g in [1, 2, 3, 4]
+//-                 a.btn(href=`/matches/pending?class=${selectedClass}&group=${g}` 
+//-                       class=(selectedGroup == g ? 'btn-secondary' : 'btn-outline-secondary'))= g
+
+//-     if matches.length > 0
+//-       - var currentRound = 0
+//-       each match in matches
+//-         if match.round !== currentRound
+//-           - currentRound = match.round
+//-           .mt-5.mb-3
+//-             h4.text-success.border-bottom.pb-2
+
+//-               | Semana #{currentRound} 
+//-               small.text-muted.fs-6 (Data limite: #{match.deadline.toLocaleDateString('pt-BR')})
+        
+//-         .card.mb-2.shadow-sm(class=match.played ? 'bg-light opacity-75' : '')
+//-           .card-body.py-2
+//-             .row.align-items-center
+//-               .col-md-2.text-center
+//-                 if match.played
+//-                   span.badge.bg-secondary FINALIZADO
+//-                 else
+//-                   span.badge.bg-warning.text-dark PENDENTE
+              
+//-               .col-md-8
+//-                 .row.text-center.align-items-center
+//-                   .col-4.fw-bold.fs-5= match.player1
+//-                   .col-4
+//-                     if match.played
+//-                       //- Exibe o Placar (Sets 1, 2 e Tiebreak se existir)
+//-                       .d-flex.justify-content-center.align-items-center.gap-2
+//-                         span.badge.bg-dark.fs-6= `${match.set1.p1}-${match.set1.p2}`
+//-                         span.badge.bg-dark.fs-6= `${match.set2.p1}-${match.set2.p2}`
+//-                         if match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
+//-                           span.badge.bg-danger.fs-6= `TB: ${match.set3.p1}-${match.set3.p2}`
+//-                     else
+//-                       span.text-muted vs
+//-                   .col-4.fw-bold.fs-5= match.player2
+              
+//-               .col-md-2.text-end
+//-                 a.btn.btn-sm(href=`/matches/score/${match._id}` class=match.played ? 'btn-outline-secondary' : 'btn-success')
+//-                   = match.played ? 'Editar Placar' : 'Inserir Placar'
+//-     else
+//-       .text-center.py-5
+//-         p.text-muted Sem jogos agendados para esse grupo.
 
 
 //- extends layout

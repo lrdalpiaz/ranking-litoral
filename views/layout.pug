@@ -6,9 +6,9 @@ html(lang="pt-br")
     title Ranking Tênis Litoral — Classic Clay
     //- Bootstrap 5 & Icons
     link(rel="stylesheet" href="/stylesheets/bootstrap.min.css")
-    link(rel="stylesheet" href="https://jsdelivr.net")    
+    //- link(rel="stylesheet" href="https://jsdelivr.net")    
     //- 2. AOS Animation CSS
-    link(href="https://unpkg.com" rel="stylesheet")
+    link(href="/stylesheets/aos.css" rel="stylesheet")
     //- Fontes: Playfair Display para títulos (clássico) e Lato para corpo
     link(href="https://googleapis.com" rel="stylesheet")
     
@@ -87,7 +87,7 @@ html(lang="pt-br")
   body
     nav.navbar.navbar-expand-lg.navbar-dark.sticky-top.mb-4.shadow
       .container
-        a.navbar-brand(href="/ranking") 
+        a.navbar-brand(href="/matches/ranking") 
           i.bi.bi-heptagon-fill.me-2
 
           | LITORAL TENNIS CLUB
@@ -98,7 +98,7 @@ html(lang="pt-br")
         #navbarNav.collapse.navbar-collapse
           ul.navbar-nav.ms-auto
             li.nav-item
-              a.nav-link(href="/ranking") 
+              a.nav-link(href="/matches/ranking") 
                 i.bi.bi-trophy.me-1
                 | Ranking
             li.nav-item
@@ -115,7 +115,7 @@ html(lang="pt-br")
       p.mb-1 Litoral Tennis Tour — Rio Grande do Sul
       p.text-uppercase(style="letter-spacing: 2px;") Grand Slam Tradition
 
-    script(src="https://unpkg.com")
+    script(src="/javascripts/aos.js")
     script.
       AOS.init({ duration: 800, once: true }); // Inicializa animações
     
