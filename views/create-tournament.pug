@@ -1,60 +1,95 @@
 extends layout
 
 block content
+  style.
+    /* Garante que o texto dentro da busca do Tom Select seja visível */
+    .ts-control {
+      border-color: #1b4d3e !important;
+      padding: 8px !important;
+    }
+    .ts-dropdown .active {
+      background-color: #d35400 !important; /* Cor de Saibro ao selecionar */
+      color: white !important;
+    }
+    .ts-control .item {
+      background-color: #1b4d3e !important; /* Etiqueta do jogador em Verde */
+      color: white !important;
+      border-radius: 3px !important;
+    }
   .container.mt-4
-    h2.fw-bold.mb-4 🏆 Criar nova temporada
+    h2.fw-bold.mb-4 🏆 Configurar Nova Temporada
     form(action="/tournaments/create" method="POST")
       .card.shadow-sm.mb-4
         .card-body
           .row
             .col-md-6.mb-3
-              label.form-label Nome
-              input.form-control(name="name" placeholder="Ex: 2026-1" required)
+              label.form-label Nome da Temporada
+              input.form-control(name="name" placeholder="Ex: Open Verão 2024" required)
             .col-md-6.mb-3
-              label.form-label Data de início
+              label.form-label Data de Início
               input.form-control(type="date" name="startDate" required)
 
+      h4.mb-3 Classes e Grupos
       each cls in ['A', 'B', 'C', 'D', 'E']
-        .card.mb-4.border-primary
-          .card-header.bg-primary.text-white.d-flex.justify-content-between.align-items-center
-            span.fw-bold Classe #{cls}
+        .card.mb-4.border-0.shadow-sm
+          //- Forçamos o fundo verde e a cor do texto para branco total
+          .card-header.d-flex.justify-content-between.align-items-center(style="background-color: #1b4d3e; border-bottom: 3px solid #d35400; padding: 12px 20px;")
+            
+            //- Aqui está a correção: usamos h5 com cor branca forçada
+            h5.mb-0.fw-bold(style="color: #1b4d3e !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);") CLASSE #{cls}
+            
             div.d-flex.align-items-center
-              label.me-2.small Número de grupos:
-              input.form-control.form-control-sm(type="number" name=`groupsCount_${cls}` min="0" max="8" value="0" style="width: 70px;" onchange=`updateGroups('${cls}', this.value)`)
+              label.me-2.small.fw-bold(style="color: #1b4d3e !important;") NÚMERO DE GRUPOS:
+              input.form-control.form-control-sm.text-center(
+                type="number" 
+                name=`groupsCount_${cls}` 
+                min="0" 
+                max="8" 
+                value="0" 
+                style="width: 60px; font-weight: 900; color: #1b4d3e; border: 2px solid #d35400;" 
+                onchange=`updateGroups('${cls}', this.value)`
+              )
           
-          //- Este contêiner será preenchido pelo JavaScript abaixo
           .card-body
             .row(id=`groups-container-${cls}`)
-              .col-12.text-muted.small Sem grupos definidos para esse classe
+              .col-12.text-muted.small Nenhum grupo definido para esta classe.
 
-      button.btn.btn-success.btn-lg.w-100.my-4(type="submit") Gerar grupos e partidas
+      button.btn.btn-success.btn-lg.w-100.my-4(type="submit") Gerar Torneio
 
-    //- Script para gerar os grupos dinamicamente
     script.
-      const allPlayers = !{JSON.stringify(players)}; // Passa a lista de jogadores do Node para o JS
+      // Passa a lista de jogadores do banco para o JavaScript
+      const allPlayers = !{JSON.stringify(players)};
 
       function updateGroups(cls, count) {
         const container = document.getElementById(`groups-container-${cls}`);
-        container.innerHTML = ''; // Limpa o atual
+        container.innerHTML = '';
 
         if (count == 0) {
-          container.innerHTML = '<div class="col-12 text-muted small">No groups defined for this class.</div>';
+          container.innerHTML = '<div class="col-12 text-muted small">Nenhum grupo definido.</div>';
           return;
         }
 
         for (let i = 1; i <= count; i++) {
           const groupDiv = document.createElement('div');
-          groupDiv.className = 'col-md-6 col-lg-3 mb-3';
+          groupDiv.className = 'col-md-6 mb-4';
           
+          const selectId = `select-${cls}-${i}`;
           let options = allPlayers.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
           
           groupDiv.innerHTML = `
-            <label class="fw-bold small">Group ${i}</label>
-            <select name="players_${cls}_${i}" class="form-select form-select-sm" multiple size="6" required>
+            <label class="fw-bold small mb-1">Grupo ${i}</label>
+            <select id="${selectId}" name="players_${cls}_${i}" multiple placeholder="Digite o nome do jogador..." autocomplete="off">
               ${options}
             </select>
-            <small class="text-muted d-block" style="font-size: 0.7rem;">Hold Ctrl to select players</small>
           `;
           container.appendChild(groupDiv);
+
+          // Inicializa a busca no campo recém criado
+          new TomSelect(`#${selectId}`, {
+            plugins: ['remove_button'],
+            maxItems: 12,
+            persist: false,
+            create: false
+          });
         }
       }

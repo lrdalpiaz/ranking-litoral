@@ -3,7 +3,11 @@ html(lang="pt-br")
   head
     meta(charset="UTF-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    title Ranking Tênis Litoral — Classic Clay
+    title RANKING TOP LITORAL NORTE - RS
+    //- CONFIGURAÇÃO DO FAVICON
+    link(rel="icon" type="image/png" href="/images/favicon-32x32.png")
+    //- Se quiser suporte para dispositivos Apple (ícone na tela inicial)
+    link(rel="apple-touch-icon" href="/images/favicon-32x32.png")
     //- Bootstrap 5 & Icons
     link(rel="stylesheet" href="/stylesheets/bootstrap.min.css")
     //- link(rel="stylesheet" href="https://jsdelivr.net")    
@@ -11,6 +15,7 @@ html(lang="pt-br")
     link(href="/stylesheets/aos.css" rel="stylesheet")
     //- Fontes: Playfair Display para títulos (clássico) e Lato para corpo
     link(href="https://googleapis.com" rel="stylesheet")
+    link(href="https://cdn.jsdelivr.net/npm/tom-select@2.5.2/dist/css/tom-select.css" rel="stylesheet")
     
     style.
       :root {
@@ -22,9 +27,13 @@ html(lang="pt-br")
       
       body {
         font-family: 'Lato', sans-serif;
-        background-color: var(--cream-bg);
-        background-image: url('https://transparenttextures.com'); /* Textura leve de saibro */
-        color: var(--forest-green);
+        background-color: #fdfaf5; 
+        background-attachment: fixed;
+        /* Centraliza o logo e impede que ele se repita */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 60%; /* Ajuste a porcentagem para aumentar/diminuir o logo no fundo */
+        color: #1b4d3e;
         min-height: 100vh;
       }
 
@@ -87,10 +96,9 @@ html(lang="pt-br")
   body
     nav.navbar.navbar-expand-lg.navbar-dark.sticky-top.mb-4.shadow
       .container
-        a.navbar-brand(href="/matches/ranking") 
-          i.bi.bi-heptagon-fill.me-2
-
-          | LITORAL TENNIS CLUB
+        a.navbar-brand.d-flex.align-items-center(href="/matches/ranking") 
+          img.me-2(src="/images/logo-nav.png" alt="Logo" style="height: 40px; width: auto;")
+          span.d-none.d-sm-inline RANKING TOP LITORAL NORTE - RS
         
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav")
           span.navbar-toggler-icon
@@ -100,13 +108,22 @@ html(lang="pt-br")
             li.nav-item
               a.nav-link(href="/matches/ranking") 
                 i.bi.bi-trophy.me-1
-                | Ranking
+                | Classificação
             li.nav-item
               a.nav-link(href="/matches/pending") 
                 i.bi.bi-calendar3.me-1
                 | Agenda
-            li.nav-item.ms-lg-3
-              a.btn.btn-success(href="/tournaments/new") + New Tournament
+            if user
+              if user.role === 'admin'
+                li.nav-item
+                  a.btn.btn-success.btn-sm(href="/tournaments/new") + Nova Temporada
+              li.nav-item
+                span.nav-link.text-white Olá, #{user.name}
+                a.nav-link(href="/logout") Logout
+              li.nav-item
+            else
+              li.nav-item
+                a.nav-link(href="/login") Login
 
     main.pb-5
       block content
@@ -120,3 +137,4 @@ html(lang="pt-br")
       AOS.init({ duration: 800, once: true }); // Inicializa animações
     
     script(src="/javascripts/bootstrap.bundle.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/tom-select@2.5.2/dist/js/tom-select.complete.min.js")

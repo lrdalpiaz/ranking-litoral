@@ -1,28 +1,44 @@
 extends layout
 
 block content
-  .container.mt-4#main-container(data-class=selectedClass data-group=selectedGroup)
+  .container.mt-4#main-container(data-class=selectedClass data-group=selectedGroup data-tournament=selectedTournament)
     .d-flex.justify-content-between.align-items-center.mb-4(data-aos="fade-down")
-      h2.fw-bold.text-uppercase 📅 Tournament Schedule
+      h2.fw-bold.text-uppercase 📅 Agenda de jogos
       if selectedClass || selectedGroup
-        a.btn.btn-sm.btn-outline-danger.rounded-0(href="/matches/pending") Reset Filters
+        a.btn.btn-sm.btn-outline-danger.rounded-0(href="/matches/pending") Limpar Filtros
 
     //- Filtros Persistentes
-    .card.mb-4.border-0.shadow-sm(data-aos="fade-down")
-      .card-body.bg-white
-        .row.g-3.align-items-center
-          .col-auto
-            span.small.text-muted.text-uppercase.fw-bold.d-block Class
-            .btn-group
+    .card.border-0.shadow-sm.mb-4(data-aos="fade-down")
+      .card-body.bg-white.p-4
+        .row.align-items-end.g-2
+          //- Tournament
+          .col-md-4
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Tournament
+            select.form-select.form-select-sm.border-success(style="height: 38px;" onchange="...")
+              //- options...
+        
+          //- Class
+          .col-md-4
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Class
+            .btn-group.w-100(style="height: 38px;")
               each c in ['A', 'B', 'C', 'D', 'E']
-                a.btn.btn-sm(href=`/matches/pending?class=${c}&group=${selectedGroup}` 
-                      class=(selectedClass == c ? 'btn-success' : 'btn-outline-success'))= c
-          .col-auto.ms-md-4
-            span.small.text-muted.text-uppercase.fw-bold.d-block Group
-            .btn-group
+                a.btn.btn-sm.d-flex.align-items-center.justify-content-center(
+                  href=`/matches/pending?class=${c}&group=${selectedGroup}` 
+                  class=(selectedClass == c ? 'btn-success fw-bold' : 'btn-outline-success')
+                  style="flex: 1; font-size: 0.85rem; border-width: 1px;"
+                )= c
+          
+          //- Group
+          .col-md-4
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 👥 Group
+            .btn-group.w-100(style="height: 38px;")
               each g in [1, 2, 3, 4]
-                a.btn.btn-sm(href=`/matches/pending?class=${selectedClass}&group=${g}` 
-                      class=(selectedGroup == g ? 'btn-dark' : 'btn-outline-dark'))= g
+                a.btn.btn-sm.d-flex.align-items-center.justify-content-center(
+                  href=`/matches/pending?group=${g}&class=${selectedClass}` 
+                  class=(selectedGroup == g ? 'btn-dark fw-bold' : 'btn-outline-dark')
+                  style="flex: 1; font-size: 0.85rem; border-width: 1px;"
+                )= g
+
 
     //- Listagem de Jogos
     if matches.length > 0
@@ -33,8 +49,8 @@ block content
           .mt-5.mb-3(data-aos="fade-right")
             h4.text-uppercase.fw-900(style="color: var(--clay-orange); border-left: 4px solid var(--clay-orange); padding-left: 15px;")
 
-              | Week #{currentRound} 
-              small.text-muted.fs-6.ms-2 — Deadline: #{match.deadline.toLocaleDateString('pt-BR')}
+              | Semana #{currentRound} 
+              small.text-muted.fs-6.ms-2 — Data limite: #{match.deadline.toLocaleDateString('pt-BR')}
         
         .card.mb-2.border-0.shadow-sm(data-aos="fade-up" data-aos-delay=(index % 5) * 50)
           .card-body.py-3(id=`match-row-${match._id}` class=match.played ? 'bg-light' : '')
@@ -43,7 +59,7 @@ block content
               //- Status (Aumente para col-md-1 se necessário)
               .col-md-2.text-center.border-end
                 span.badge.rounded-pill(id=`status-${match._id}` class=match.played ? 'bg-secondary' : 'bg-warning text-dark')
-                  = match.played ? 'COMPLETED' : 'PENDING'
+                  = match.played ? 'FINALIZADO' : 'PENDENTE'
             
               //- Confronto (Ajustado para col-md-8 para dar mais espaço ao centro)
               .col-md-8
@@ -68,12 +84,19 @@ block content
               //- Ação
               .col-md-2.text-end(id=`action-container-${match._id}`)
                 //- (Botão de edit/score que já tínhamos)
-                button.btn.btn-sm.w-100(
-                  class=match.played ? 'btn-outline-secondary' : 'btn-success'
-                  onclick=`enableInlineEdit('${match._id}', ${JSON.stringify(match)})`
-                )
-                  i.bi.bi-pencil-square.me-1
-                  span= match.played ? 'Edit' : 'Score'
+                - var userEmail = user ? user.email : null
+                - var canEdit = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email)
+
+  
+                if canEdit
+                  button.btn.btn-sm.w-100(
+                    class=match.played ? 'btn-outline-secondary' : 'btn-success'
+                    onclick=`enableInlineEdit('${match._id}', ${JSON.stringify(match)})`
+                  )
+                    i.bi.bi-pencil-square.me-1
+                    span= match.played ? 'Alterar' : 'Salvar'
+                else
+                  span.badge.bg-light.text-muted Read Only
 
     else
       .text-center.py-5
@@ -125,9 +148,10 @@ block content
   
     async function saveInline(id) {
       // 1. Pega os filtros direto da URL atual do navegador
-      const urlParams = new URLSearchParams(window.location.search);
-      const currentClass = urlParams.get('class') || 'A';
-      const currentGroup = urlParams.get('group') || '1';
+      const container = document.getElementById('main-container');
+      const tId = container.getAttribute('data-tournament');
+      const cCls = container.getAttribute('data-class');
+      const cGrp = container.getAttribute('data-group');
   
       // 2. Coleta os dados dos inputs
       const data = {
@@ -145,10 +169,8 @@ block content
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-        
         if (response.ok) {
-          // 3. Redireciona forçando os valores capturados da URL
-          window.location.href = `/matches/pending?class=${currentClass}&group=${currentGroup}`;
+          window.location.href = `/matches/pending?tournamentId=${tId}&class=${cCls}&group=${cGrp}`;
         } else {
           alert("Erro ao salvar os dados.");
         }

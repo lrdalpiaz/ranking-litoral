@@ -1,30 +1,36 @@
 var express = require('express');
 var router = express.Router();
 const Match = require('../models/Match');
+const Tournament = require('../models/Tournament');
 
 router.get('/pending', async (req, res) => {
     try {
-        // Define 'A' e '1' como valores padrão se a query vier vazia
-        const selectedClass = req.query.class || 'A';
-        const selectedGroup = req.query.group || '1';
-        const selectedPlayed = req.query.played || true;
+        const { tournamentId, class: qClass, group: qGroup } = req.query;
+        
+        // 1. Busca todos os torneios para o filtro
+        const tournaments = await Tournament.find().sort({ startDate: -1 });
+        
+        // 2. Define o Torneio padrão (o mais recente) se nenhum for selecionado
+        const selectedTournament = tournamentId || (tournaments[0] ? tournaments[0]._id.toString() : null);
+        const selectedClass = qClass || 'A';
+        const selectedGroup = qGroup || '1';
 
-        let query = {
-            // played: selectedPlayed,
-            className: selectedClass,
-            groupNumber: parseInt(selectedGroup)
-        };
+        let query= {}; // Ou remova para ver todos, como fizemos antes
+        if (selectedTournament) query.tournamentId = selectedTournament;
+        if (selectedClass) query.className = selectedClass;
+        if (selectedGroup) query.groupNumber = parseInt(selectedGroup);
 
-
-        // A ORDENAÇÃO É FUNDAMENTAL: Primeiro por Rodada, depois por Classe/Grupo
         const matches = await Match.find(query).sort({ round: 1, className: 1, groupNumber: 1 });
-        res.render('pending_matches', {
-            matches,
-            selectedClass, // Enviando de volta para o Pug
-            selectedGroup  // Enviando de volta para o Pug
+
+        res.render('pending_matches', { 
+            matches, 
+            tournaments,
+            selectedTournament,
+            selectedClass, 
+            selectedGroup 
         });
     } catch (err) {
-        res.status(500).send("Error loading matches.");
+        res.status(500).send("Erro ao filtrar jogos.");
     }
 });
 
@@ -43,6 +49,15 @@ router.get('/score/:id', async (req, res) => {
 router.post('/update/:id', async (req, res) => {
     try {
         const { s1p1, s1p2, s2p1, s2p2, s3p1, s3p2 } = req.body;
+        const match = await Match.findById(req.params.id);
+        const currentUserEmail = req.session.userEmail;
+      
+        const isOwner = currentUserEmail === match.player1Email || currentUserEmail === match.player2Email;
+        const isAdmin = req.session.role === 'admin';
+      
+        if (!isOwner && !isAdmin) {
+          return res.status(403).json({ error: 'Acesso negado' });
+        }
         await Match.findByIdAndUpdate(req.params.id, {
             set1: { p1: Number(s1p1), p2: Number(s1p2) },
             set2: { p1: Number(s2p1), p2: Number(s2p2) },

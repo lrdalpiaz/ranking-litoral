@@ -6,6 +6,8 @@ const matchSchema = new mongoose.Schema({
   groupNumber: Number, // 1, 2, 3...
   player1: { type: String, required: true },
   player2: { type: String, required: true },
+  player1Email: { type: String, required: true }, // Chave para permissão
+  player2Email: { type: String, required: true }, // Chave para permissão
   set1: { p1: Number, p2: Number },
   set2: { p1: Number, p2: Number },
   set3: { p1: Number, p2: Number }, // Tiebreak

@@ -1,0 +1,43 @@
+extends layout
+
+block content
+  .container.mt-5
+    .row.justify-content-center
+      .col-md-5(data-aos="zoom-in")
+        .card.shadow-lg.border-0
+          .card-header.text-white.text-center.py-4(style="background-color: var(--forest-green); border-bottom: 5px solid var(--clay-orange);")
+            i.bi.bi-person-badge.display-4.mb-2.d-block
+            h3.fw-bold.text-uppercase(style="letter-spacing: 1px;") Athlete Login
+            small Access your matches and results
+          
+          .card-body.p-5.bg-white
+            if error
+              .alert.alert-danger.rounded-0.small.mb-4
+                i.bi.bi-exclamation-triangle.me-2
+
+                | #{error}
+            
+            form(action="/login" method="POST")
+              .mb-4
+                label.form-label.text-uppercase.fw-bold.small Email Address
+                .input-group
+                  span.input-group-text.bg-light
+                    i.bi.bi-envelope
+                  input.form-control(type="email" name="email" placeholder="email@example.com" required autofocus)
+              
+              .mb-4
+                label.form-label.text-uppercase.fw-bold.small Password
+                .input-group
+                  span.input-group-text.bg-light
+                    i.bi.bi-lock
+                  input.form-control(type="password" name="password" placeholder="••••••" required)
+              
+              button.btn.btn-success.btn-lg.w-100.shadow-sm(type="submit") 
+                | SIGN IN
+            
+            .text-center.mt-4
+              small.text-muted 
+
+                | Default password is 
+                strong 123456 
+                | unless changed.

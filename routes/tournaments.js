@@ -14,7 +14,7 @@ function generateSchedule(players, startDate) {
 
     let playerList = [...players];
 
-    for (let round = 0; round < numRounds; round++) {
+    for (let round = 1; round <= numRounds; round++) {
         const roundDate = new Date(startDate);
         roundDate.setDate(roundDate.getDate() + (round * 7)); // Soma 7 dias por rodada
 
@@ -60,8 +60,10 @@ router.post('/create', async (req, res) => {
                             tournamentId: tournament._id,
                             className: cls,
                             groupNumber: g,
-                            player1: m.player1,
-                            player2: m.player2,
+                            player1: p1.name,
+                            player1Email: p1.email,
+                            player2: p2.name,
+                            player2Email: p2.email,
                             round: m.round,
                             deadline: m.deadline,
                             played: false
