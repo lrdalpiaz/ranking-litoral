@@ -113,57 +113,68 @@ block content
 
   //- SCRIPT PARA EDIÇÃO IN-LINE
   script.
+    const originalRows = {};
+  
     function enableInlineEdit(id, match) {
+      const row = document.getElementById(`match-row-${id}`);
       const scoreContainer = document.getElementById(`score-container-${id}`);
       const actionContainer = document.getElementById(`action-container-${id}`);
+      const statusBadge = document.getElementById(`status-${id}`);
   
+      // Salva o estado original antes de editar
+      originalRows[id] = {
+        scoreHTML: scoreContainer.innerHTML,
+        actionHTML: actionContainer.innerHTML,
+        statusHTML: statusBadge ? statusBadge.outerHTML : ''
+      };
+  
+      // 1. Transforma o Placar em Inputs
       scoreContainer.innerHTML = `
-        <div class="d-flex justify-content-center align-items-end gap-2 flex-wrap">
-          <div class="text-center">
-            <small class="d-block text-muted" style="font-size: 0.65rem;">SET 1</small>
+        <div class="d-flex justify-content-center align-items-end gap-2">
+          <div class="text-center"><small class="d-block text-muted" style="font-size:0.6rem">SET 1</small>
             <div class="d-flex gap-1">
-              <input type="number" id="s1p1-${id}" class="form-control form-control-sm text-center" style="width:50px; height:35px;" value="${match.set1?.p1 ?? ''}">
-              <input type="number" id="s1p2-${id}" class="form-control form-control-sm text-center" style="width:50px; height:35px;" value="${match.set1?.p2 ?? ''}">
+              <input type="number" id="s1p1-${id}" class="form-control form-control-sm text-center" style="width:45px" value="${match.set1?.p1 ?? ''}">
+              <input type="number" id="s1p2-${id}" class="form-control form-control-sm text-center" style="width:45px" value="${match.set1?.p2 ?? ''}">
             </div>
           </div>
-          <div class="text-center">
-            <small class="d-block text-muted" style="font-size: 0.65rem;">SET 2</small>
+          <div class="text-center"><small class="d-block text-muted" style="font-size:0.6rem">SET 2</small>
             <div class="d-flex gap-1">
-              <input type="number" id="s2p1-${id}" class="form-control form-control-sm text-center" style="width:50px; height:35px;" value="${match.set2?.p1 ?? ''}">
-              <input type="number" id="s2p2-${id}" class="form-control form-control-sm text-center" style="width:50px; height:35px;" value="${match.set2?.p2 ?? ''}">
+              <input type="number" id="s2p1-${id}" class="form-control form-control-sm text-center" style="width:45px" value="${match.set2?.p1 ?? ''}">
+              <input type="number" id="s2p2-${id}" class="form-control form-control-sm text-center" style="width:45px" value="${match.set2?.p2 ?? ''}">
             </div>
           </div>
-          <div class="text-center bg-warning bg-opacity-10 px-1 rounded">
-            <small class="d-block text-danger fw-bold" style="font-size: 0.65rem;">TIE-BREAKÃO</small>
+          <div class="text-center bg-warning bg-opacity-10 rounded px-1">
+            <small class="d-block text-danger fw-bold" style="font-size:0.6rem">TIE-BREAKÃO</small>
             <div class="d-flex gap-1">
-              <input type="number" id="s3p1-${id}" class="form-control form-control-sm text-center border-danger" style="width:50px; height:35px;" value="${match.set3?.p1 ?? ''}">
-              <input type="number" id="s3p2-${id}" class="form-control form-control-sm text-center border-danger" style="width:50px; height:35px;" value="${match.set3?.p2 ?? ''}">
+              <input type="number" id="s3p1-${id}" class="form-control form-control-sm text-center border-danger" style="width:45px" value="${match.set3?.p1 ?? ''}">
+              <input type="number" id="s3p2-${id}" class="form-control form-control-sm text-center border-danger" style="width:45px" value="${match.set3?.p2 ?? ''}">
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
   
+      // 2. Troca os Botões
       actionContainer.innerHTML = `
         <div class="d-flex flex-column gap-1">
-          <button class="btn btn-sm btn-primary w-100" onclick="saveInline('${id}')">
-            <i class="bi bi-check-circle"></i> SALVAR
+          <button class="btn btn-sm btn-success w-100" onclick="saveInline('${id}')">
+            <i class="bi bi-check-circle-fill"></i> SALVAR
           </button>
-          <button class="btn btn-sm btn-outline-secondary w-100" onclick="window.location.reload()">
-            <i class="bi bi-x-circle"></i> CANCELAR
+          <button class="btn btn-sm btn-outline-danger w-100" onclick="cancelInline('${id}')">
+            <i class="bi bi-x-circle-fill"></i> VOLTAR
           </button>
-        </div>
-      `;
+        </div>`;
+    }
+  
+    function cancelInline(id) {
+      const data = originalRows[id];
+      document.getElementById(`score-container-${id}`).innerHTML = data.scoreHTML;
+      document.getElementById(`action-container-${id}`).innerHTML = data.actionHTML;
+      // Se o status mudou, ele volta ao original também
+      const statusElement = document.getElementById(`status-${id}`);
+      if (statusElement) statusElement.outerHTML = data.statusHTML;
     }
   
     async function saveInline(id) {
-      // 1. Pega os filtros direto da URL atual do navegador
-      const container = document.getElementById('main-container');
-      const tId = container.getAttribute('data-tournament');
-      const cCls = container.getAttribute('data-class');
-      const cGrp = container.getAttribute('data-group');
-  
-      // 2. Coleta os dados dos inputs
-      const data = {
+      const scoreData = {
         s1p1: document.getElementById(`s1p1-${id}`).value,
         s1p2: document.getElementById(`s1p2-${id}`).value,
         s2p1: document.getElementById(`s2p1-${id}`).value,
@@ -176,15 +187,40 @@ block content
         const response = await fetch(`/matches/update/${id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+          body: JSON.stringify(scoreData)
         });
+  
         if (response.ok) {
-          window.location.href = `/matches/pending?tournamentId=${tId}&class=${cCls}&group=${cGrp}`;
-        } else {
-          alert("Erro ao salvar os dados.");
+          // Atualiza a interface sem recarregar
+          const scoreContainer = document.getElementById(`score-container-${id}`);
+          const statusBadge = document.getElementById(`status-${id}`);
+          const actionContainer = document.getElementById(`action-container-${id}`);
+  
+          // Atualiza badges de placar
+          let tbHtml = (scoreData.s3p1 > 0 || scoreData.s3p2 > 0) ? `<span class="badge bg-danger">TB:${scoreData.s3p1}-${scoreData.s3p2}</span>` : '';
+          scoreContainer.innerHTML = `
+            <div class="d-flex justify-content-center gap-1">
+              <span class="badge bg-dark">${scoreData.s1p1}-${scoreData.s1p2}</span>
+              <span class="badge bg-dark">${scoreData.s2p1}-${scoreData.s2p2}</span>
+              ${tbHtml}
+            </div>`;
+  
+          // Atualiza badge de status
+          if (statusBadge) {
+            statusBadge.className = 'badge rounded-pill bg-secondary';
+            statusBadge.innerText = 'COMPLETED';
+          }
+  
+          // Restaura o botão de EDIT
+          actionContainer.innerHTML = `
+            <button class="btn btn-sm btn-outline-secondary w-100" onclick='enableInlineEdit("${id}", ${JSON.stringify({...scoreData, played:true})})'>
+              <i class="bi bi-pencil-square me-1"></i> Edit
+            </button>`;
+            
+          // Opcional: Atualizar o ranking em background se quiser, mas aqui a agenda já está linda.
         }
       } catch (err) {
-        alert("Erro de comunicação com o servidor.");
+        alert("Erro ao salvar.");
       }
     }
 
