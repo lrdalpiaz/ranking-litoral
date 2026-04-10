@@ -29,24 +29,26 @@ block content
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Class
             .btn-group.w-100(style="height: 38px;")
               each c in ['A', 'B', 'C', 'D', 'E']
-                a.btn.btn-sm.d-flex.align-items-center.justify-content-center(
-                  href=`/matches/pending?class=${c}&group=${selectedGroup}` 
+                button.btn.btn-sm.filter-btn-class(
+                  type="button"
+                  onclick=`filterMatches('${c}', null)` 
                   class=(selectedClass == c ? 'btn-success fw-bold' : 'btn-outline-success')
-                  style="flex: 1; font-size: 0.85rem; border-width: 1px;"
+                  data-class=c
                 )= c
           
-          //- Group
+          //- Filtro de Grupo
           .col-md-4
             label.small.text-uppercase.fw-bold.text-muted.mb-1 👥 Group
             .btn-group.w-100(style="height: 38px;")
               each g in [1, 2, 3, 4]
-                a.btn.btn-sm.d-flex.align-items-center.justify-content-center(
-                  href=`/matches/pending?group=${g}&class=${selectedClass}` 
+                button.btn.btn-sm.filter-btn-group(
+                  type="button"
+                  onclick=`filterMatches(null, '${g}')` 
                   class=(selectedGroup == g ? 'btn-dark fw-bold' : 'btn-outline-dark')
-                  style="flex: 1; font-size: 0.85rem; border-width: 1px;"
+                  data-group=g
                 )= g
 
-
+    #matches-list-container
     //- Listagem de Jogos
     if matches.length > 0
       - var currentRound = 0
@@ -186,6 +188,147 @@ block content
       }
     }
 
+    async function filterMatches(newClass, newGroup) {
+      const container = document.getElementById('main-container');
+      const tId = container.getAttribute('data-tournament');
+      const activeClass = newClass || container.getAttribute('data-class');
+      const activeGroup = newGroup || container.getAttribute('data-group');
+  
+      try {
+        const response = await fetch(`/matches/filter?tournamentId=${tId}&class=${activeClass}&group=${activeGroup}`);
+        const data = await response.json();
+  
+        if (data.matches) {
+          // CORREÇÃO AQUI: O nome deve bater com a definição abaixo
+          updateFilterUI(activeClass, activeGroup);
+          
+          renderMatchesList(data.matches, data.user);
+          
+          container.setAttribute('data-class', activeClass);
+          container.setAttribute('data-group', activeGroup);
+          
+          const newUrl = `/matches/pending?tournamentId=${tId}&class=${activeClass}&group=${activeGroup}`;
+          window.history.pushState({ path: newUrl }, '', newUrl);
+        }
+      } catch (err) {
+        console.error("Erro ao filtrar:", err);
+      }
+    }
+  
+    // DEFINIÇÃO DA FUNÇÃO (Certifique-se de que o nome é este)
+    function updateFilterUI(cls, grp) {
+      document.querySelectorAll('.filter-btn-class').forEach(btn => {
+        if (btn.getAttribute('data-class') === cls) {
+          btn.classList.replace('btn-outline-success', 'btn-success');
+          btn.classList.add('fw-bold');
+        } else {
+          btn.classList.replace('btn-success', 'btn-outline-success');
+          btn.classList.remove('fw-bold');
+        }
+      });
+  
+      document.querySelectorAll('.filter-btn-group').forEach(btn => {
+        if (btn.getAttribute('data-group') == grp) {
+          btn.classList.replace('btn-outline-dark', 'btn-dark');
+          btn.classList.add('fw-bold');
+        } else {
+          btn.classList.replace('btn-dark', 'btn-outline-dark');
+          btn.classList.remove('fw-bold');
+        }
+      });
+    }
+
+    function renderMatchesList(matches, user) {
+        const listContainer = document.getElementById('matches-list-container');
+        listContainer.innerHTML = '';
+    
+        if (matches.length === 0) {
+            listContainer.innerHTML = '<div class="text-center py-5 text-muted card border-0">Nenhuma partida agendada para este grupo.</div>';
+            return;
+        }
+    
+        let currentRound = 0;
+        matches.forEach((match, index) => {
+            // Cabeçalho da Semana
+            if (match.round !== currentRound) {
+                currentRound = match.round;
+                const roundHeader = `
+                    <div class="mt-5 mb-3" data-aos="fade-right">
+                        <h4 class="text-uppercase fw-900" style="color: var(--clay-orange); border-left: 4px solid var(--clay-orange); padding-left: 15px;">
+                            Semana ${currentRound} 
+                            <small class="text-muted fs-6 ms-2">— Data limite: ${new Date(match.deadline).toLocaleDateString('pt-BR')}</small>
+                        </h4>
+                    </div>`;
+                listContainer.insertAdjacentHTML('beforeend', roundHeader);
+            }
+    
+            // Lógica de Permissão de Edição
+            const userEmail = user ? user.email : null;
+            const canEdit = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email);
+    
+            // Construção do Card da Partida
+            const matchHTML = `
+                <div class="card mb-2 border-0 shadow-sm ${match.played ? 'bg-light' : ''}" data-aos="fade-up" id="match-card-${match._id}">
+                    <div class="card-body py-3" id="match-row-${match._id}">
+                        <div class="row align-items-center">
+                            <!-- Status -->
+                            <div class="col-md-2 text-center border-end">
+                                <span class="badge rounded-pill ${match.played ? 'bg-secondary' : 'bg-warning text-dark'}">
+                                    ${match.played ? 'COMPLETED' : 'PENDING'}
+                                </span>
+                            </div>
+    
+                            <!-- Confronto -->
+                            <div class="col-md-8">
+                                <div class="row align-items-center text-center">
+                                    <div class="col-4 text-end">
+                                        <span class="fw-bold me-2">${match.player1}</span>
+                                    </div>
+    
+                                    <div class="col-4" id="score-container-${match._id}">
+                                        ${match.played ? renderScoreBadges(match) : '<span class="text-muted small">VS</span>'}
+                                    </div>
+    
+                                    <div class="col-4 text-start">
+                                        <span class="fw-bold ms-2">${match.player2}</span>
+                                    </div>
+                                </div>
+                            </div>
+    
+                            <!-- Ação -->
+                            <div class="col-md-2 text-end" id="action-container-${match._id}">
+                                ${canEdit ? `
+                                    <button class="btn btn-sm w-100 ${match.played ? 'btn-outline-secondary' : 'btn-success'}" 
+                                            onclick='enableInlineEdit("${match._id}", ${JSON.stringify(match)})'>
+                                        <i class="bi bi-pencil-square me-1"></i>
+                                        ${match.played ? 'Edit' : 'Score'}
+                                    </button>
+                                ` : '<span class="badge bg-light text-muted">Read Only</span>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            
+            listContainer.insertAdjacentHTML('beforeend', matchHTML);
+        });
+    
+        // REINICIALIZA O AOS para animar os novos itens
+        if (typeof AOS !== 'undefined') AOS.refresh();
+    }
+    
+    // Função auxiliar para gerar os placares dentro da lista JS
+    function renderScoreBadges(match) {
+        let tbHtml = (match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)) 
+            ? `<span class="badge bg-danger">TB:${match.set3.p1}-${match.set3.p2}</span>` 
+            : '';
+        
+        return `
+            <div class="d-flex justify-content-center gap-1">
+                <span class="badge bg-dark">${match.set1.p1}-${match.set1.p2}</span>
+                <span class="badge bg-dark">${match.set2.p1}-${match.set2.p2}</span>
+                ${tbHtml}
+            </div>`;
+    }
 //- extends layout
 
 //- block content

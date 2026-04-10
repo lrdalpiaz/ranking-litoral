@@ -34,6 +34,27 @@ router.get('/pending', async (req, res) => {
     }
 });
 
+router.get('/filter', async (req, res) => {
+    try {
+        const { tournamentId, class: qClass, group: qGroup } = req.query;
+        let query = { 
+            tournamentId, 
+            className: qClass, 
+            groupNumber: parseInt(qGroup) 
+        };
+        console.log(query);
+        
+        const matches = await Match.find(query).sort({ round: 1 });
+        // Retornamos os dados e o usuário logado para controle de permissão no front
+        res.json({ 
+            matches, 
+            user: req.session.userEmail ? { email: req.session.userEmail, role: req.session.role } : null 
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Abre o formulário de placar para um jogo específico
 router.get('/score/:id', async (req, res) => {
     try {
