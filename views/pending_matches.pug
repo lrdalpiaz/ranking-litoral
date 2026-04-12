@@ -49,67 +49,66 @@ block content
                 )= g
 
     #matches-list-container
-    //- Listagem de Jogos
-    if matches.length > 0
-      - var currentRound = 0
-      each match, index in matches
-        if match.round !== currentRound
-          - currentRound = match.round
-          .mt-5.mb-3(data-aos="fade-right")
-            h4.text-uppercase.fw-900(style="color: var(--clay-orange); border-left: 4px solid var(--clay-orange); padding-left: 15px;")
-
-              | Semana #{currentRound} 
-              small.text-muted.fs-6.ms-2 — Data limite: #{match.deadline.toLocaleDateString('pt-BR')}
-        
-        .card.mb-2.border-0.shadow-sm(data-aos="fade-up" data-aos-delay=(index % 5) * 50)
-          .card-body.py-3(id=`match-row-${match._id}` class=match.played ? 'bg-light' : '')
-            //- Dentro do card-body do loop de matches
-            .row.align-items-center
-              //- Status (Aumente para col-md-1 se necessário)
-              .col-md-2.text-center.border-end
-                span.badge.rounded-pill(id=`status-${match._id}` class=match.played ? 'bg-secondary' : 'bg-warning text-dark')
-                  = match.played ? 'FINALIZADO' : 'PENDENTE'
-            
-              //- Confronto (Ajustado para col-md-8 para dar mais espaço ao centro)
-              .col-md-8
-                .row.align-items-center.text-center
-                  .col-3.text-end
-                    span.fw-bold.small.d-block= match.player1
-                  
-                  //- Container do Placar (Damos mais espaço aqui: col-6)
-                  .col-6(id=`score-container-${match._id}`)
-                    if match.played
-                      .d-flex.justify-content-center.gap-1
-                        span.badge.bg-dark= `${match.set1.p1}-${match.set1.p2}`
-                        span.badge.bg-dark= `${match.set2.p1}-${match.set2.p2}`
-                        if match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
-                          span.badge.bg-danger= `TB:${match.set3.p1}-${match.set3.p2}`
-                    else
-                      span.text-muted.small VS
-                  
-                  .col-3.text-start
-                    span.fw-bold.small.d-block= match.player2
-              
-              //- Ação
-              .col-md-2.text-end(id=`action-container-${match._id}`)
-                //- (Botão de edit/score que já tínhamos)
-                - var userEmail = user ? user.email : null
-                - var canEdit = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email)
-
+      if matches.length > 0
+        - var currentRound = 0
+        each match, index in matches
+          if match.round !== currentRound
+            - currentRound = match.round
+            .mt-5.mb-3(data-aos="fade-right")
+              h4.text-uppercase.fw-900(style="color: var(--clay-orange); border-left: 4px solid var(--clay-orange); padding-left: 15px;")
   
-                if canEdit
-                  button.btn.btn-sm.w-100(
-                    class=match.played ? 'btn-outline-secondary' : 'btn-success'
-                    onclick=`enableInlineEdit('${match._id}', ${JSON.stringify(match)})`
-                  )
-                    i.bi.bi-pencil-square.me-1
-                    span= match.played ? 'Alterar' : 'Salvar'
-                else
-                  span.badge.bg-light.text-muted Somente Visualização
+                | Semana #{currentRound} 
+                small.text-muted.fs-6.ms-2 — Data limite: #{match.deadline.toLocaleDateString('pt-BR')}
+          
+          .card.mb-2.border-0.shadow-sm(data-aos="fade-up" data-aos-delay=(index % 5) * 50)
+            .card-body.py-3(id=`match-row-${match._id}` class=match.played ? 'bg-light' : '')
+              //- Dentro do card-body do loop de matches
+              .row.align-items-center
+                //- Status (Aumente para col-md-1 se necessário)
+                .col-md-2.text-center.border-end
+                  span.badge.rounded-pill(id=`status-${match._id}` class=match.played ? 'bg-secondary' : 'bg-warning text-dark')
+                    = match.played ? 'FINALIZADO' : 'PENDENTE'
+              
+                //- Confronto (Ajustado para col-md-8 para dar mais espaço ao centro)
+                .col-md-8
+                  .row.align-items-center.text-center
+                    .col-3.text-end
+                      span.fw-bold.small.d-block= match.player1
+                    
+                    //- Container do Placar (Damos mais espaço aqui: col-6)
+                    .col-6(id=`score-container-${match._id}`)
+                      if match.played
+                        .d-flex.justify-content-center.gap-1
+                          span.badge.bg-dark= `${match.set1.p1}-${match.set1.p2}`
+                          span.badge.bg-dark= `${match.set2.p1}-${match.set2.p2}`
+                          if match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
+                            span.badge.bg-danger= `TB:${match.set3.p1}-${match.set3.p2}`
+                      else
+                        span.text-muted.small VS
+                    
+                    .col-3.text-start
+                      span.fw-bold.small.d-block= match.player2
+                
+                //- Ação
+                .col-md-2.text-end(id=`action-container-${match._id}`)
+                  //- (Botão de edit/score que já tínhamos)
+                  - var userEmail = user ? user.email : null
+                  - var canEdit = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email)
+  
+    
+                  if canEdit
+                    button.btn.btn-sm.w-100(
+                      class=match.played ? 'btn-outline-secondary' : 'btn-success'
+                      onclick=`enableInlineEdit('${match._id}', ${JSON.stringify(match)})`
+                    )
+                      i.bi.bi-pencil-square.me-1
+                      span= match.played ? 'Alterar' : 'Salvar'
+                  else
+                    span.badge.bg-light.text-muted Somente Visualização
 
-    else
-      .text-center.py-5
-        p.text-muted No matches for this selection.
+      else
+        .text-center.py-5
+          p.text-muted No matches for this selection.
 
   //- SCRIPT PARA EDIÇÃO IN-LINE
   script.
@@ -275,11 +274,16 @@ block content
     }
 
     function renderMatchesList(matches, user) {
-        const listContainer = document.getElementById('matches-list-container');
-        listContainer.innerHTML = '';
+        const listContainer = document.querySelector('#matches-list-container');
+        console.log("Limpando container:", listContainer); // Veja se ele aponta para o lugar certo
+        
+        // Use textContent para garantir que o navegador limpe até nós de texto órfãos
+        while (listContainer.firstChild) {
+            listContainer.removeChild(listContainer.firstChild);
+        }
     
-        if (matches.length === 0) {
-            listContainer.innerHTML = '<div class="text-center py-5 text-muted card border-0">Nenhuma partida agendada para este grupo.</div>';
+        if (!matches || matches.length === 0) {
+            listContainer.innerHTML = '<p class="text-center py-5">Sem jogos.</p>';
             return;
         }
     
@@ -339,7 +343,7 @@ block content
                                         <i class="bi bi-pencil-square me-1"></i>
                                         ${match.played ? 'Edit' : 'Score'}
                                     </button>
-                                ` : '<span class="badge bg-light text-muted">Read Only</span>'}
+                                ` : '<span class="badge bg-light text-muted">Somente visualização</span>'}
                             </div>
                         </div>
                     </div>
