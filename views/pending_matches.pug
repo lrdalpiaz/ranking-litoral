@@ -71,12 +71,13 @@ block content
               
                 //- Confronto (Ajustado para col-md-8 para dar mais espaço ao centro)
                 .col-md-8
-                  .row.align-items-center.text-center
-                    .col-3.text-end
-                      span.fw-bold.small.d-block= match.player1
+                  .row.align-items-center.text-center(id=`match-row-${match._id}`)
+                    //- Jogador 1 (col-12 no mobile, col-md-3 no desktop)
+                    .col-12.col-md-3.mb-2.mb-md-0
+                      span.fw-bold.text-uppercase.small= match.player1
                     
                     //- Container do Placar (Damos mais espaço aqui: col-6)
-                    .col-6(id=`score-container-${match._id}`)
+                    .col-12.col-md-6.my-2.my-md-0(id=`score-container-${match._id}`)
                       if match.played
                         .d-flex.justify-content-center.gap-1
                           span.badge.bg-dark= `${match.set1.p1}-${match.set1.p2}`
@@ -84,10 +85,10 @@ block content
                           if match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
                             span.badge.bg-danger= `TB:${match.set3.p1}-${match.set3.p2}`
                       else
-                        span.text-muted.small VS
+                        span.text-muted vs
                     
-                    .col-3.text-start
-                      span.fw-bold.small.d-block= match.player2
+                    .col-12.col-md-3.mt-2.mt-md-0
+                      span.fw-bold.text-uppercase.small= match.player2
                 
                 //- Ação
                 .col-md-2.text-end(id=`action-container-${match._id}`)
@@ -113,66 +114,68 @@ block content
   //- SCRIPT PARA EDIÇÃO IN-LINE
   script.
     const originalRows = {};
-  
+
     function enableInlineEdit(id, match) {
-      const row = document.getElementById(`match-row-${id}`);
       const scoreContainer = document.getElementById(`score-container-${id}`);
       const actionContainer = document.getElementById(`action-container-${id}`);
       const statusBadge = document.getElementById(`status-${id}`);
-  
-      // Salva o estado original antes de editar
+      const row = document.getElementById(`match-row-${id}`);
+         // Salva o estado atual ANTES de transformar em inputs
       originalRows[id] = {
         scoreHTML: scoreContainer.innerHTML,
         actionHTML: actionContainer.innerHTML,
-        statusHTML: statusBadge ? statusBadge.outerHTML : ''
+        statusHTML: statusBadge ? statusBadge.outerHTML : '',
+        rowClass: row.className
       };
-  
-      // 1. Transforma o Placar em Inputs
-      scoreContainer.innerHTML = `
-        <div class="d-flex justify-content-center align-items-end gap-2">
-          <div class="text-center"><small class="d-block text-muted" style="font-size:0.6rem">SET 1</small>
-            <div class="d-flex gap-1">
+         // Ajusta a linha para empilhar no celular e alinhar no desktop
+      row.classList.add('flex-column', 'flex-md-row', 'gap-3', 'gap-md-0');
+         scoreContainer.innerHTML = `
+        <div class="row g-2 justify-content-center w-100">
+          <div class="col-4 col-md-auto text-center">
+            <small class="d-block text-muted" style="font-size:0.6rem">SET 1</small>
+            <div class="d-flex gap-1 justify-content-center">
               <input type="number" id="s1p1-${id}" class="form-control form-control-sm text-center" style="width:45px" value="${match.set1?.p1 ?? ''}">
               <input type="number" id="s1p2-${id}" class="form-control form-control-sm text-center" style="width:45px" value="${match.set1?.p2 ?? ''}">
             </div>
           </div>
-          <div class="text-center"><small class="d-block text-muted" style="font-size:0.6rem">SET 2</small>
-            <div class="d-flex gap-1">
+          <div class="col-4 col-md-auto text-center">
+            <small class="d-block text-muted" style="font-size:0.6rem">SET 2</small>
+            <div class="d-flex gap-1 justify-content-center">
               <input type="number" id="s2p1-${id}" class="form-control form-control-sm text-center" style="width:45px" value="${match.set2?.p1 ?? ''}">
               <input type="number" id="s2p2-${id}" class="form-control form-control-sm text-center" style="width:45px" value="${match.set2?.p2 ?? ''}">
             </div>
           </div>
-          <div class="text-center bg-warning bg-opacity-10 rounded px-1">
-            <small class="d-block text-danger fw-bold" style="font-size:0.6rem">TIE-BREAKÃO</small>
-            <div class="d-flex gap-1">
+          <div class="col-4 col-md-auto text-center bg-warning bg-opacity-10 rounded px-1">
+            <small class="d-block text-danger fw-bold" style="font-size:0.55rem">TIE-BREAKÃO</small>
+            <div class="d-flex gap-1 justify-content-center">
               <input type="number" id="s3p1-${id}" class="form-control form-control-sm text-center border-danger" style="width:45px" value="${match.set3?.p1 ?? ''}">
               <input type="number" id="s3p2-${id}" class="form-control form-control-sm text-center border-danger" style="width:45px" value="${match.set3?.p2 ?? ''}">
             </div>
           </div>
         </div>`;
-  
-      // 2. Troca os Botões
-      actionContainer.innerHTML = `
-        <div class="d-flex flex-column gap-1">
-          <button class="btn btn-sm btn-success w-100" onclick="saveInline('${id}')">
+         actionContainer.innerHTML = `
+        <div class="d-flex flex-row flex-md-column gap-2 w-100">
+          <button class="btn btn-sm btn-success flex-grow-1" onclick="saveInline('${id}')">
             <i class="bi bi-check-circle-fill"></i> SALVAR
           </button>
-          <button class="btn btn-sm btn-outline-danger w-100" onclick="cancelInline('${id}')">
+          <button class="btn btn-sm btn-outline-danger flex-grow-1" onclick="cancelInline('${id}')">
             <i class="bi bi-x-circle-fill"></i> VOLTAR
           </button>
         </div>`;
     }
-  
-    function cancelInline(id) {
+       function cancelInline(id) {
       const data = originalRows[id];
+      const row = document.getElementById(`match-row-${id}`);
+      
+      // Restaura HTML e Classes originais
       document.getElementById(`score-container-${id}`).innerHTML = data.scoreHTML;
       document.getElementById(`action-container-${id}`).innerHTML = data.actionHTML;
-      // Se o status mudou, ele volta ao original também
+      row.className = data.rowClass;
+      
       const statusElement = document.getElementById(`status-${id}`);
       if (statusElement) statusElement.outerHTML = data.statusHTML;
     }
-  
-    async function saveInline(id) {
+       async function saveInline(id) {
       const scoreData = {
         s1p1: document.getElementById(`s1p1-${id}`).value,
         s1p2: document.getElementById(`s1p2-${id}`).value,
@@ -181,42 +184,34 @@ block content
         s3p1: document.getElementById(`s3p1-${id}`).value || 0,
         s3p2: document.getElementById(`s3p2-${id}`).value || 0,
       };
-  
-      try {
-        const response = await fetch(`/matches/update/${id}`, {
+         try {
+        const response = await fetch(`/api/matches/update/${id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(scoreData)
         });
-  
-        if (response.ok) {
-          // Atualiza a interface sem recarregar
-          const scoreContainer = document.getElementById(`score-container-${id}`);
-          const statusBadge = document.getElementById(`status-${id}`);
-          const actionContainer = document.getElementById(`action-container-${id}`);
-  
-          // Atualiza badges de placar
+           if (response.ok) {
+          // Reconstrói a linha visualmente sem refresh
+          const row = document.getElementById(`match-row-${id}`);
+          row.className = originalRows[id].rowClass; // Volta a classe original (lado a lado)
+          
           let tbHtml = (scoreData.s3p1 > 0 || scoreData.s3p2 > 0) ? `<span class="badge bg-danger">TB:${scoreData.s3p1}-${scoreData.s3p2}</span>` : '';
-          scoreContainer.innerHTML = `
+          
+          document.getElementById(`score-container-${id}`).innerHTML = `
             <div class="d-flex justify-content-center gap-1">
               <span class="badge bg-dark">${scoreData.s1p1}-${scoreData.s1p2}</span>
               <span class="badge bg-dark">${scoreData.s2p1}-${scoreData.s2p2}</span>
               ${tbHtml}
             </div>`;
-  
-          // Atualiza badge de status
+             const statusBadge = document.getElementById(`status-${id}`);
           if (statusBadge) {
             statusBadge.className = 'badge rounded-pill bg-secondary';
             statusBadge.innerText = 'COMPLETED';
           }
-  
-          // Restaura o botão de EDIT
-          actionContainer.innerHTML = `
+             document.getElementById(`action-container-${id}`).innerHTML = `
             <button class="btn btn-sm btn-outline-secondary w-100" onclick='enableInlineEdit("${id}", ${JSON.stringify({...scoreData, played:true})})'>
               <i class="bi bi-pencil-square me-1"></i> Edit
             </button>`;
-            
-          // Opcional: Atualizar o ranking em background se quiser, mas aqui a agenda já está linda.
         }
       } catch (err) {
         alert("Erro ao salvar.");
