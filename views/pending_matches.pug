@@ -185,7 +185,7 @@ block content
         s3p2: document.getElementById(`s3p2-${id}`).value || 0,
       };
          try {
-        const response = await fetch(`/api/matches/update/${id}`, {
+        const response = await fetch(`/matches/update/${id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(scoreData)
