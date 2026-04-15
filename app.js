@@ -9,6 +9,7 @@ require('dotenv').config();
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var simulatorRouter = require('./routes/simulator.js');
 var matchesRouter = require('./routes/matches');
 var tournamentsRouter = require('./routes/tournaments');
 var app = express();
@@ -51,6 +52,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use('/', indexRouter);
+app.use('/simulator', simulatorRouter);
 app.use('/users', usersRouter);
 app.use('/matches', matchesRouter);
 app.use('/tournaments', tournamentsRouter);

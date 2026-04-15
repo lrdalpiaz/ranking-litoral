@@ -1,0 +1,281 @@
+extends layout
+
+block content
+  .container.mt-4#main-container(data-tournament=selectedTournament data-class=selectedClass data-group=selectedGroup)
+    .d-flex.justify-content-between.align-items-center.mb-4
+      h2.fw-bold.text-uppercase 🧪 Simulador de Resultados
+      span.badge.bg-warning.text-dark Modo Simulação Ativado
+
+    //- BARRA DE FILTROS (Igual ao Pending Matches)
+    .card.mb-4.border-0.shadow-sm
+      .card-body.bg-white
+        .row.g-3.align-items-end
+          .col-md-4
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Torneio
+            select.form-select.form-select-sm.border-success(style="height: 38px;" onchange=`location.href='/simulator?tournamentId=' + this.value + '&class=${selectedClass}&group=${selectedGroup}'`)
+              each t in tournaments
+                option(value=t._id selected=(t._id.toString() === selectedTournament))= t.name
+          .col-md-4
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Classe
+            .btn-group.w-100(style="height: 38px;")
+              each c in ['A', 'B', 'C', 'D', 'E']
+                a.btn.btn-sm.d-flex.align-items-center.justify-content-center(href=`/simulator?tournamentId=${selectedTournament}&class=${c}&group=${selectedGroup}` class=(selectedClass == c ? 'btn-success fw-bold' : 'btn-outline-success'))= c
+          .col-md-4
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 👥 Grupo
+            .btn-group.w-100(style="height: 38px;")
+              each g in [1, 2, 3, 4]
+                a.btn.btn-sm.d-flex.align-items-center.justify-content-center(href=`/simulator?tournamentId=${selectedTournament}&class=${selectedClass}&group=${g}` class=(selectedGroup == g ? 'btn-dark fw-bold' : 'btn-outline-dark'))= g
+    .d-flex.gap-2.mb-3
+      button.btn.btn-sm.btn-outline-secondary(onclick="resetSimulation()") 
+        i.bi.bi-trash.me-1
+        | Limpar Simulação
+      span.small.text-muted.align-self-center * Jogos oficiais estão bloqueados para edição.
+
+    .row
+      //- COLUNA DE JOGOS (Layout Pending Matches)
+      .col-lg-7
+        #matches-list-container
+          - var currentRound = 0
+          each match, index in matches
+            if match.round !== currentRound
+              - currentRound = match.round
+              .mt-5.mb-3
+                h5.text-uppercase.fw-bold(style="color: var(--clay-orange); border-left: 4px solid var(--clay-orange); padding-left: 15px;") Semana #{currentRound}
+            
+            .card.mb-2.border-0.shadow-sm(class=match.played ? 'bg-light opacity-75' : '')
+              .card-body.py-2
+                .row.align-items-center.text-center
+                  //- Jogador 1
+                  .col-3.text-end
+                    span.fw-bold.small(class=match.played ? 'text-muted' : '')= match.player1
+                  
+                  //- ÁREA DE INPUTS ESPAÇADA (Aumentada para col-6)
+                  .col-6
+                    .d-flex.justify-content-center.align-items-end.gap-2
+                      //- SET 1
+                      .text-center
+                        small.d-block.text-muted(style="font-size: 0.6rem;") SET 1
+                        .d-flex.gap-1
+                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="1" data-player="p1" value=(match.played ? match.set1.p1 : '') disabled=match.played)
+                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="1" data-player="p2" value=(match.played ? match.set1.p2 : '') disabled=match.played)
+                      
+                      //- SET 2
+                      .text-center.border-start.border-end.px-2
+                        small.d-block.text-muted(style="font-size: 0.6rem;") SET 2
+                        .d-flex.gap-1
+                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="2" data-player="p1" value=(match.played ? match.set2.p1 : '') disabled=match.played)
+                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="2" data-player="p2" value=(match.played ? match.set2.p2 : '') disabled=match.played)
+                      
+                      //- TIE-BREAKÃO (Com borda e destaque para os dois dígitos)
+                      .text-center.bg-warning.bg-opacity-10.rounded.px-1
+                        small.d-block.text-danger.fw-bold(style="font-size: 0.55rem;") TIE-BREAK
+                        .d-flex.gap-1
+                          input.form-control.form-control-sm.text-center.sim-input.border-danger.fw-bold(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="3" data-player="p1" value=(match.set3 && match.played ? match.set3.p1 : '') disabled=match.played)
+                          input.form-control.form-control-sm.text-center.sim-input.border-danger.fw-bold(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="3" data-player="p2" value=(match.set3 && match.played ? match.set3.p2 : '') disabled=match.played)
+                  
+                  //- Jogador 2
+                  .col-3.text-start
+                    span.fw-bold.small(class=match.played ? 'text-muted' : '')= match.player2
+
+      //- COLUNA DA TABELA (Fixed)
+      .col-lg-5
+        .sticky-top(style="top: 100px;")
+          .card.shadow-lg.border-0
+            .card-body.p-0
+              .table-responsive
+                table.table.table-hover.mb-0#sim-table
+                  thead.table-light
+                    tr
+                      th Atleta
+                      th.text-center Pts
+                      th.text-center V
+                      th.text-center S
+                      th.text-center G
+                  tbody
+                    //- Preenchido por JS
+
+  script(src="/javascripts/rankingLogic.js")
+  script.
+    const players = !{JSON.stringify([...new Set(matches.flatMap(m => [m.player1, m.player2]))])};
+    const initialMatches = !{JSON.stringify(matches)};
+    
+    document.querySelectorAll('.sim-input').forEach(input => {
+      input.addEventListener('input', (e) => {
+          // 1. Verifica se deve bloquear o Tiebreak desta partida específica
+          const matchIdx = e.target.getAttribute('data-match');
+          checkTiebreakLock(matchIdx);
+          
+          // 2. Roda a atualização da tabela
+          updateSimulation();
+      });
+    });
+
+    function checkTiebreakLock(idx) {
+        // Captura os inputs dos dois primeiros sets
+        const s1p1 = parseInt(document.querySelector(`[data-match="${idx}"][data-set="1"][data-player="p1"]`).value) || 0;
+        const s1p2 = parseInt(document.querySelector(`[data-match="${idx}"][data-set="1"][data-player="p2"]`).value) || 0;
+        const s2p1 = parseInt(document.querySelector(`[data-match="${idx}"][data-set="2"][data-player="p1"]`).value) || 0;
+        const s2p2 = parseInt(document.querySelector(`[data-match="${idx}"][data-set="2"][data-player="p2"]`).value) || 0;
+    
+        // Seleciona os campos do Tiebreak
+        const tbInputs = document.querySelectorAll(`[data-match="${idx}"][data-set="3"]`);
+        
+        // Lógica: Se alguém venceu os dois sets (2-0)
+        const p1WinsTwo = (s1p1 > s1p2 && s2p1 > s2p2);
+        const p2WinsTwo = (s1p2 > s1p1 && s2p2 > s2p1);
+    
+        if (p1WinsTwo || p2WinsTwo) {
+            tbInputs.forEach(input => {
+                input.value = ''; // Limpa o valor
+                input.disabled = true; // Bloqueia
+                input.style.opacity = '0.3'; // Feedback visual de desativado
+            });
+        } else {
+            // Se o jogo está 1-1 ou incompleto, libera o Tiebreak
+            // Mas apenas se o jogo não for um jogo REAL já finalizado
+            const isRealMatch = initialMatches[idx].played;
+            if (!isRealMatch) {
+                tbInputs.forEach(input => {
+                    input.disabled = false;
+                    input.style.opacity = '1';
+                });
+            }
+        }
+    }
+
+    function updateSimulation() {
+      const stats = {};
+      const simulatedResults = [];
+      players.forEach(p => stats[p] = { name: p, points: 0, wins: 0, sWon: 0, sLost: 0, gFav: 0, gAg: 0 });
+
+      initialMatches.forEach((m, i) => {
+        const s1p1 = parseInt(document.querySelector(`[data-match="${i}"][data-set="1"][data-player="p1"]`).value);
+        const s1p2 = parseInt(document.querySelector(`[data-match="${i}"][data-set="1"][data-player="p2"]`).value);
+        const s2p1 = parseInt(document.querySelector(`[data-match="${i}"][data-set="2"][data-player="p1"]`).value);
+        const s2p2 = parseInt(document.querySelector(`[data-match="${i}"][data-set="2"][data-player="p2"]`).value);
+        const s3p1 = parseInt(document.querySelector(`[data-match="${i}"][data-set="3"][data-player="p1"]`).value) || 0;
+        const s3p2 = parseInt(document.querySelector(`[data-match="${i}"][data-set="3"][data-player="p2"]`).value) || 0;
+
+        if (!isNaN(s1p1) && !isNaN(s1p2)) {
+          let winner = "";
+          if ((s1p1 > s1p2 && s2p1 > s2p2) || s3p1 > s3p2) winner = m.player1;
+          else winner = m.player2;
+          
+          simulatedResults.push({ p1: m.player1, p2: m.player2, winner, s1p1, s1p2, s2p1, s2p2, s3p1, s3p2 });
+        }
+        if (!isNaN(s1p1) && !isNaN(s1p2) && !isNaN(s2p1) && !isNaN(s2p2)) {
+          const p1 = m.player1;
+          const p2 = m.player2;
+
+          let setsP1 = (s1p1 > s1p2 ? 1 : 0) + (s2p1 > s2p2 ? 1 : 0);
+          let setsP2 = (s1p2 > s1p1 ? 1 : 0) + (s2p2 > s2p1 ? 1 : 0);
+          
+          stats[p1].gFav += (s1p1 + s2p1); stats[p1].gAg += (s1p2 + s2p2);
+          stats[p2].gFav += (s1p2 + s2p2); stats[p2].gAg += (s1p1 + s2p1);
+
+          if (setsP1 === 2) { 
+            stats[p1].points += 3; stats[p1].wins++; stats[p1].sWon += 2; stats[p2].sLost += 2; 
+          } else if (setsP2 === 2) { 
+            stats[p2].points += 3; stats[p2].wins++; stats[p2].sWon += 2; stats[p1].sLost += 2; 
+          } else if (s3p1 > 0 || s3p2 > 0) { // Super Tiebreak
+            if (s3p1 > s3p2) {
+              stats[p1].points += 2; stats[p2].points += 1; stats[p1].wins++;
+              stats[p1].sWon += 2; stats[p1].sLost += 1; stats[p2].sWon += 1; stats[p2].sLost += 2;
+              stats[p1].gFav += 1;
+            } else {
+              stats[p2].points += 2; stats[p1].points += 1; stats[p2].wins++;
+              stats[p2].sWon += 2; stats[p2].sLost += 1; stats[p1].sWon += 1; stats[p1].sLost += 2;
+              stats[p2].gFav += 1;
+            }
+          }
+        }
+      });
+      const simulatedMatches = initialMatches.map((m, i) => ({
+          player1: m.player1,
+          player2: m.player2,
+          s1p1: document.querySelector(`[data-match="${i}"][data-set="1"][data-player="p1"]`).value,
+          s1p2: document.querySelector(`[data-match="${i}"][data-set="1"][data-player="p2"]`).value,
+          s2p1: document.querySelector(`[data-match="${i}"][data-set="2"][data-player="p1"]`).value,
+          s2p2: document.querySelector(`[data-match="${i}"][data-set="2"][data-player="p2"]`).value,
+          s3p1: document.querySelector(`[data-match="${i}"][data-set="3"][data-player="p1"]`).value,
+          s3p2: document.querySelector(`[data-match="${i}"][data-set="3"][data-player="p2"]`).value
+        }));
+      const sorted = calculateStanding(players, simulatedMatches);
+      //- const sorted = Object.values(stats).sort((a, b) => {
+      //-   // REGRA 0: Pontos (Critério Soberano)
+      //-   if (b.points !== a.points) return b.points - a.points;
+    
+      //-   // --- CASO DE EMPATE EM PONTOS ---
+      //-   const tiedPlayers = Object.values(stats).filter(p => p.points === a.points);
+    
+      //-   // SITUAÇÃO 1: Empate entre exatamente 2 jogadores (CONFRONTO DIRETO)
+      //-   if (tiedPlayers.length === 2) {
+      //-     const match = simulatedResults.find(m => 
+      //-       (m.p1 === a.name && m.p2 === b.name) || (m.p1 === b.name && m.p2 === a.name)
+      //-     );
+      //-     if (match) return match.winner === a.name ? -1 : 1;
+      //-   }
+    
+      //-   // SITUAÇÃO 2: Empate entre 3 ou mais jogadores (MULTICRITÉRIOS)
+      //-   // 1 - Número de vitórias
+      //-   if (b.wins !== a.wins) return b.wins - a.wins;
+    
+      //-   // 2 - Saldo de sets
+      //-   if ((b.sWon - b.sLost) !== (a.sWon - a.sLost)) return (b.sWon - b.sLost) - (a.sWon - a.sLost);
+    
+      //-   // 3 - Pontos apenas entre os empatados (Mini-League)
+      //-   const ptsInTied = (player) => {
+      //-       let pts = 0;
+      //-       simulatedResults.forEach(m => {
+      //-           if (tiedPlayers.some(tp => tp.name === m.p1) && tiedPlayers.some(tp => tp.name === m.p2)) {
+      //-               if (m.p1 === player.name || m.p2 === player.name) {
+      //-                   const isP1 = m.p1 === player.name;
+      //-                   const won = m.winner === player.name;
+      //-                   const s1w = isP1 ? m.s1p1 > m.s1p2 : m.s1p2 > m.s1p1;
+      //-                   const s2w = isP1 ? m.s2p1 > m.s2p2 : m.s2p2 > m.s2p1;
+      //-                   const sets = (s1w ? 1 : 0) + (s2w ? 1 : 0);
+      //-                   if (sets === 2 && won) pts += 3;
+      //-                   else if (won) pts += 2;
+      //-                   else if (!won && (m.s3p1 > 0 || m.s3p2 > 0)) pts += 1;
+      //-               }
+      //-           }
+      //-       });
+      //-       return pts;
+      //-   };
+      //-   if (ptsInTied(b) !== ptsInTied(a)) return ptsInTied(b) - ptsInTied(a);
+    
+      //-   // 4 - Saldo de games
+      //-                       // Critério 5: Saldo de Games (Incluindo bônus de tiebreak)
+      //-   const aGameBalance = a.gFav - a.gAg;
+      //-   const bGameBalance = b.gFav - b.gAg;
+      //-   if (bGameBalance !== aGameBalance) return bGameBalance - aGameBalance;
+      //-   // Critério 6: Aleatório (Sorte)
+      //-   return 0.5 - Math.random();
+      //- });
+        
+      const tbody = document.querySelector('#sim-table tbody');
+      tbody.innerHTML = sorted.map((p, idx) => `
+          <tr class="${idx < 2 ? 'table-success' : ''}" style="transition: all 0.3s ease;">
+            <td class="align-middle fw-bold small">
+              ${idx < 2 ? '<i class="bi bi-check-circle-fill text-success me-1"></i>' : ''}
+              ${p.name}
+            </td>
+            <!-- COLUNA DE PONTOS COM DESTAQUE (table-primary) -->
+            <td class="text-center align-middle fw-bold table-primary" style="background-color: rgba(13, 110, 253, 0.1) !important;">
+              ${p.points}
+            </td>
+            <td class="text-center align-middle">${p.wins}</td>
+            <td class="text-center align-middle">${p.sWon - p.sLost}</td>
+            <td class="text-center align-middle">${p.gFav - p.gAg}</td>
+          </tr>
+      `).join('');
+    }
+    
+    function resetSimulation() {
+      // Seleciona apenas os inputs que NÃO estão desabilitados
+      document.querySelectorAll('.sim-input:not(:disabled)').forEach(input => {
+        input.value = '';
+      });
+      updateSimulation(); // Recalcula a tabela
+    }
+    updateSimulation();

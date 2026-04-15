@@ -5,10 +5,17 @@ block content
     h2.text-center.mb-4 🎾 Classificação
 
     //- 1. Abas de Classes (Navegação)
-    ul.nav.nav-pills.justify-content-center.mb-4#classTabs(role="tablist")
+    ul.nav.nav-pills.justify-content-center.mb-5#classTabs(role="tablist")
       each cls, index in Object.keys(tournamentData).sort()
-        li.nav-item
-          button.nav-link(class=index === 0 ? 'active' : '' id=`tab-${cls}` data-bs-toggle="pill" data-bs-target=`#content-${cls}`) Classe #{cls}
+        li.nav-item(role="presentation")
+          button.nav-link.btn-outline-clay(
+            class=index === 0 ? 'active' : '' 
+            id=`tab-${cls}` 
+            data-bs-toggle="pill" 
+            data-bs-target=`#content-${cls}` 
+            type="button" 
+            role="tab"
+          ) Classe #{cls}
 
     //- 2. Conteúdo das Abas
     .tab-content
@@ -31,7 +38,6 @@ block content
                             th Tenista
                             th.text-center Pts
                             th.text-center V
-                            th.text-center D
                             th.text-center S
                             th.text-center G
                         tbody
@@ -42,8 +48,7 @@ block content
                               td.fw-bold= athlete.name
                               td.text-center.table-primary= athlete.points
                               td.text-center= athlete.wins
-                              td.text-center= athlete.losses
-                              td.text-center= (athlete.setsWon - athlete.setsLost)
-                              td.text-center= (athlete.gFavor - athlete.gAgainst)
+                              td.text-center= (athlete.sWon - athlete.sLost)
+                              td.text-center= (athlete.gFav - athlete.gAg)
 
     script(src="/javascripts/bootstrap.bundle.min.js")

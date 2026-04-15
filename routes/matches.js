@@ -1,7 +1,10 @@
 var express = require('express');
 var router = express.Router();
 const Match = require('../models/Match');
+const User = require('../models/User');
 const Tournament = require('../models/Tournament');
+const { calculateStanding } = require('../public/javascripts/rankingLogic');
+const { log } = require('debug/src/browser');
 
 router.get('/pending', async (req, res) => {
     try {
@@ -94,112 +97,161 @@ router.post('/update/:id', async (req, res) => {
 
 router.get('/ranking', async (req, res) => {
     try {
-        // 1. Busca apenas jogos que já possuem resultado (played: true)
-        const matches = await Match.find({ played: true });
-
-        // Estrutura para armazenar os dados: { 'A': { '1': { 'Jogador': { stats } } } }
+        // 1. Busca todas as partidas (jogadas e pendentes para garantir que todos apareçam)
+        const allMatches = await Match.find().lean();
         const tournamentData = {};
 
-        matches.forEach(m => {
-            const { className, groupNumber, player1, player2, set1, set2, set3 } = m;
-
-            // Inicializa estrutura se não existir
-            if (!tournamentData[className]) tournamentData[className] = {};
-            if (!tournamentData[className][groupNumber]) tournamentData[className][groupNumber] = {};
-
-            const group = tournamentData[className][groupNumber];
-
-            [player1, player2].forEach(name => {
-                if (!group[name]) {
-                    group[name] = {
-                        name, points: 0, wins: 0, losses: 0,
-                        setsWon: 0, setsLost: 0, gFavor: 0, gAgainst: 0,
-                        matchesAgainst: {} // Para conferir confronto direto
-                    };
-                }
-            });
-
-            const p1 = group[player1];
-            const p2 = group[player2];
-
-            // Cálculo de Games (Apenas Sets 1 e 2)
-            p1.gFavor += (set1.p1 + set2.p1);
-            p1.gAgainst += (set1.p2 + set2.p2);
-            p2.gFavor += (set1.p2 + set2.p2);
-            p2.gAgainst += (set1.p1 + set2.p1);
-
-            // Cálculo de Sets (Sets 1 e 2 são normais)
-            let s1 = (set1.p1 > set1.p2 ? 1 : 0) + (set2.p1 > set2.p2 ? 1 : 0);
-            let s2 = (set1.p2 > set1.p1 ? 1 : 0) + (set2.p2 > set2.p1 ? 1 : 0);
-
-            // Lógica de Pontuação e Tiebreak (Set 3)
-            if (s1 === 2) { // 2-0 J1
-                p1.points += 3; p1.wins++; p2.losses++;
-                p1.setsWon += 2; p2.setsLost += 2;
-                p1.matchesAgainst[player2] = 'win';
-            } else if (s2 === 2) { // 2-0 J2
-                p2.points += 3; p2.wins++; p1.losses++;
-                p2.setsWon += 2; p1.setsLost += 2;
-                p1.matchesAgainst[player2] = 'loss';
-            } else {
-                // Empate 1-1 -> Decisão no Tiebreak (Set 3)
-                // Tiebreak conta como Set, mas no Saldo de Games vale apenas 1 ponto
-                if (set3.p1 > set3.p2) { // 2-1 J1
-                    p1.points += 2; p2.points += 1;
-                    p1.wins++; p2.losses++;
-                    p1.setsWon += 2; p1.setsLost += 1;
-                    p2.setsWon += 1; p2.setsLost += 2;
-                    p1.gFavor += 1;
-                    p1.matchesAgainst[player2] = 'win';
-                } else { // 2-1 J2
-                    p2.points += 2; p1.points += 1;
-                    p2.wins++; p1.losses++;
-                    p2.setsWon += 2; p2.setsLost += 1;
-                    p1.setsWon += 1; p1.setsLost += 2;
-                    p2.gFavor += 1;
-                    p1.matchesAgainst[player2] = 'loss';
-                }
+        // 2. Organiza as partidas por Classe e depois por Grupo
+        allMatches.forEach(m => {
+            if (!tournamentData[m.className]) tournamentData[m.className] = {};
+            if (!tournamentData[m.className][m.groupNumber]) {
+                tournamentData[m.className][m.groupNumber] = [];
             }
+            tournamentData[m.className][m.groupNumber].push(m);
         });
-
-        // 2. Ordenação de cada grupo seguindo todos os critérios
+        // 3. Processa o Ranking para cada Grupo individualmente
         for (let cls in tournamentData) {
-            for (let gNum in tournamentData[cls]) {
-                const athletes = Object.values(tournamentData[cls][gNum]);
-
-                athletes.sort((a, b) => {
-                    // Critério 1: Pontos
-                    if (b.points !== a.points) return b.points - a.points;
-
-                    // Critério 2: Confronto Direto (Se apenas 2 empatados)
-                    const tied = athletes.filter(p => p.points === a.points);
-                    if (tied.length === 2) {
-                        if (a.matchesAgainst[b.name] === 'win') return -1;
-                        if (a.matchesAgainst[b.name] === 'loss') return 1;
-                    }
-
-                    // Critério 3: Vitórias
-                    if (b.wins !== a.wins) return b.wins - a.wins;
-
-                    // Critério 4: Saldo de Sets
-                    const aSetBalance = a.setsWon - a.setsLost;
-                    const bSetBalance = b.setsWon - b.setsLost;
-                    if (bSetBalance !== aSetBalance) return bSetBalance - aSetBalance;
-
-                    // Critério 5: Saldo de Games (Incluindo bônus de tiebreak)
-                    const aGameBalance = a.gFavor - a.gAgainst;
-                    const bGameBalance = b.gFavor - b.gAgainst;
-                    if (bGameBalance !== aGameBalance) return bGameBalance - aGameBalance;
-
-                    // Critério 6: Aleatório (Sorte)
-                    return 0.5 - Math.random();
-                });
-
-                tournamentData[cls][gNum] = athletes;
+            for (let grp in tournamentData[cls]) {
+                const matchesOfGroup = tournamentData[cls][grp];
+                
+                // Extrai atletas únicos deste grupo
+                const playersInGroup = [...new Set(matchesOfGroup.flatMap(m => [m.player1, m.player2]))];
+                
+                // Usa o motor centralizado (que considera apenas jogos 'played')
+                tournamentData[cls][grp] = calculateStanding(playersInGroup, matchesOfGroup);
             }
         }
-
+        
         res.render('ranking', { tournamentData });
+        // Estrutura para armazenar os dados: { 'A': { '1': { 'Jogador': { stats } } } }
+        // const tournamentData = {};
+
+        // allPlayers.forEach(player => {
+        //     // Se você tiver múltiplos torneios/classes, a lógica abaixo 
+        //     // deve ser adaptada para saber em qual classe cada player está.
+        //     // Para simplificar, vamos inicializar conforme os dados das partidas:
+        // });
+        // const allMatches = await Match.find();
+        // allMatches.forEach(m => {
+        //     const { className, groupNumber, player1, player2 } = m;
+
+        //     if (!tournamentData[className]) tournamentData[className] = {};
+        //     if (!tournamentData[className][groupNumber]) tournamentData[className][groupNumber] = {};
+            
+        //     const group = tournamentData[className][groupNumber];
+
+        //     // Inicializa p1 e p2 se ainda não existirem no objeto do grupo
+        //     [player1, player2].forEach(name => {
+        //         if (!group[name]) {
+        //             group[name] = { 
+        //                 name, points: 0, wins: 0, losses: 0, 
+        //                 setsWon: 0, setsLost: 0, gFavor: 0, gAgainst: 0,
+        //                 matchesAgainst: {} 
+        //             };
+        //         }
+        //     });
+        // });
+
+        // matches.forEach(m => {
+        //     const { className, groupNumber, player1, player2, set1, set2, set3 } = m;
+
+        //     // Inicializa estrutura se não existir
+        //     if (!tournamentData[className]) tournamentData[className] = {};
+        //     if (!tournamentData[className][groupNumber]) tournamentData[className][groupNumber] = {};
+
+        //     const group = tournamentData[className][groupNumber];
+
+        //     [player1, player2].forEach(name => {
+        //         if (!group[name]) {
+        //             group[name] = {
+        //                 name, points: 0, wins: 0, losses: 0,
+        //                 setsWon: 0, setsLost: 0, gFavor: 0, gAgainst: 0,
+        //                 matchesAgainst: {} // Para conferir confronto direto
+        //             };
+        //         }
+        //     });
+
+        //     const p1 = group[player1];
+        //     const p2 = group[player2];
+
+        //     // Cálculo de Games (Apenas Sets 1 e 2)
+        //     p1.gFavor += (set1.p1 + set2.p1);
+        //     p1.gAgainst += (set1.p2 + set2.p2);
+        //     p2.gFavor += (set1.p2 + set2.p2);
+        //     p2.gAgainst += (set1.p1 + set2.p1);
+
+        //     // Cálculo de Sets (Sets 1 e 2 são normais)
+        //     let s1 = (set1.p1 > set1.p2 ? 1 : 0) + (set2.p1 > set2.p2 ? 1 : 0);
+        //     let s2 = (set1.p2 > set1.p1 ? 1 : 0) + (set2.p2 > set2.p1 ? 1 : 0);
+
+        //     // Lógica de Pontuação e Tiebreak (Set 3)
+        //     if (s1 === 2) { // 2-0 J1
+        //         p1.points += 3; p1.wins++; p2.losses++;
+        //         p1.setsWon += 2; p2.setsLost += 2;
+        //         p1.matchesAgainst[player2] = 'win';
+        //     } else if (s2 === 2) { // 2-0 J2
+        //         p2.points += 3; p2.wins++; p1.losses++;
+        //         p2.setsWon += 2; p1.setsLost += 2;
+        //         p1.matchesAgainst[player2] = 'loss';
+        //     } else {
+        //         // Empate 1-1 -> Decisão no Tiebreak (Set 3)
+        //         // Tiebreak conta como Set, mas no Saldo de Games vale apenas 1 ponto
+        //         if (set3.p1 > set3.p2) { // 2-1 J1
+        //             p1.points += 2; p2.points += 1;
+        //             p1.wins++; p2.losses++;
+        //             p1.setsWon += 2; p1.setsLost += 1;
+        //             p2.setsWon += 1; p2.setsLost += 2;
+        //             p1.gFavor += 1;
+        //             p1.matchesAgainst[player2] = 'win';
+        //         } else { // 2-1 J2
+        //             p2.points += 2; p1.points += 1;
+        //             p2.wins++; p1.losses++;
+        //             p2.setsWon += 2; p2.setsLost += 1;
+        //             p1.setsWon += 1; p1.setsLost += 2;
+        //             p2.gFavor += 1;
+        //             p1.matchesAgainst[player2] = 'loss';
+        //         }
+        //     }
+        // });
+
+        // // 2. Ordenação de cada grupo seguindo todos os critérios
+        // for (let cls in tournamentData) {
+        //     for (let gNum in tournamentData[cls]) {
+        //         const athletes = Object.values(tournamentData[cls][gNum]);
+
+        //         athletes.sort((a, b) => {
+        //             // Critério 1: Pontos
+        //             if (b.points !== a.points) return b.points - a.points;
+
+        //             // Critério 2: Confronto Direto (Se apenas 2 empatados)
+        //             const tied = athletes.filter(p => p.points === a.points);
+        //             if (tied.length === 2) {
+        //                 if (a.matchesAgainst[b.name] === 'win') return -1;
+        //                 if (a.matchesAgainst[b.name] === 'loss') return 1;
+        //             }
+
+        //             // Critério 3: Vitórias
+        //             if (b.wins !== a.wins) return b.wins - a.wins;
+
+        //             // Critério 4: Saldo de Sets
+        //             const aSetBalance = a.setsWon - a.setsLost;
+        //             const bSetBalance = b.setsWon - b.setsLost;
+        //             if (bSetBalance !== aSetBalance) return bSetBalance - aSetBalance;
+
+        //             // Critério 5: Saldo de Games (Incluindo bônus de tiebreak)
+        //             const aGameBalance = a.gFavor - a.gAgainst;
+        //             const bGameBalance = b.gFavor - b.gAgainst;
+        //             if (bGameBalance !== aGameBalance) return bGameBalance - aGameBalance;
+
+        //             // Critério 6: Aleatório (Sorte)
+        //             return 0.5 - Math.random();
+        //         });
+
+        //         tournamentData[cls][gNum] = athletes;
+        //     }
+        // }
+
+        // res.render('ranking', { tournamentData });
     } catch (err) {
         console.error(err);
         res.status(500).send("Erro ao processar o ranking: " + err.message);

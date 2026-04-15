@@ -90,6 +90,51 @@ html(lang="pt-br")
         background-color: rgba(211, 84, 0, 0.05);
       }
 
+      tbody tr.table-success td, 
+      tbody tr.table-success {
+          background-color: rgba(27, 77, 62, 0.15) !important;
+          color: #1b4d3e !important;
+          --bs-table-accent-bg: transparent !important; /* Remove o degradê do Bootstrap */
+      }
+      
+      /* Adiciona a bordinha verde de "classificado" para o estilo Roland Garros */
+      tbody tr.table-success td:first-child {
+          border-left: 5px solid #1b4d3e !important;
+      }
+
+      td.table-primary {
+          color: #0a58ca !important; /* Azul mais forte para os números */
+          border-bottom: transparent !important;
+      }
+      
+      /* Garante que o verde dos classificados não suma com o azul dos pontos */
+      tr.table-success td.table-primary {
+          background-color: rgba(13, 110, 253, 0.05) !important;
+      }
+
+      .btn-outline-clay {
+        color: #1b4d3e !important; /* Verde escuro nítido */
+        background-color: transparent;
+        border: 2px solid #1b4d3e !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        transition: all 0.2s ease-in-out;
+        opacity: 1 !important; /* Garante que não esteja transparente */
+      }
+      
+      /* ESTADO SELECIONADO / HOVER: Muda para Laranja Saibro */
+      .btn-outline-clay:hover, 
+      .btn-outline-clay.active,
+      .nav-pills .nav-link.active {
+        background-color: #d35400 !important; 
+        border-color: #d35400 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 10px rgba(211, 84, 0, 0.3);
+      }
+           /* Ajuste para garantir que o Bootstrap não mude a cor do texto das abas */
+      .nav-pills .nav-link:not(.active) {
+        color: #1b4d3e !important;
+      }
       /* Badge de destaque */
       .badge.bg-dark { background-color: var(--forest-green) !important; }
       
@@ -105,6 +150,10 @@ html(lang="pt-br")
         
         #navbarNav.collapse.navbar-collapse
           ul.navbar-nav.ms-auto.align-items-center
+            li.nav-item
+             a.nav-link.text-warning.fw-bold(href="/simulator") 
+               i.bi.bi-cpu.me-1
+               | Simulador
             li.nav-item
               a.nav-link(href="/matches/ranking") 
                 i.bi.bi-trophy.me-1
