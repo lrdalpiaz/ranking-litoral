@@ -4,7 +4,7 @@ block content
   .container.mt-4#main-container(data-tournament=selectedTournament data-class=selectedClass data-group=selectedGroup)
     .d-flex.justify-content-between.align-items-center.mb-4
       h2.fw-bold.text-uppercase 🧪 Simulador de Resultados
-      span.badge.bg-warning.text-dark Modo Simulação Ativado
+      span.badge.bg-warning.text-dark.d-none.d-sm-inline Modo Simulação
 
     //- BARRA DE FILTROS (Igual ao Pending Matches)
     .card.mb-4.border-0.shadow-sm
@@ -43,39 +43,38 @@ block content
                 h5.text-uppercase.fw-bold(style="color: var(--clay-orange); border-left: 4px solid var(--clay-orange); padding-left: 15px;") Semana #{currentRound}
             
             .card.mb-2.border-0.shadow-sm(class=match.played ? 'bg-light opacity-75' : '')
-              .card-body.py-2
-                .row.align-items-center.text-center
-                  //- Jogador 1
-                  .col-3.text-end
-                    span.fw-bold.small(class=match.played ? 'text-muted' : '')= match.player1
+              .card-body.py-3
+                //- Row principal: centraliza tudo e impede quebra no PC
+                .row.align-items-center.g-0
                   
-                  //- ÁREA DE INPUTS ESPAÇADA (Aumentada para col-6)
-                  .col-6
+                  //- Jogador 1: Alinhado à DIREITA (olhando para o placar)
+                  .col-12.col-md-3.text-center.text-md-end.pe-md-3.mb-2.mb-md-0
+                    span.fw-bold.small.text-uppercase(style="font-size: 0.85rem;")= match.player1
+                  
+                  //- ÁREA DE INPUTS: Centralizada e com largura garantida
+                  .col-12.col-md-6
                     .d-flex.justify-content-center.align-items-end.gap-2
-                      //- SET 1
                       .text-center
-                        small.d-block.text-muted(style="font-size: 0.6rem;") SET 1
+                        small.d-block.text-muted.fw-bold(style="font-size: 0.65rem;") SET 1
                         .d-flex.gap-1
-                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="1" data-player="p1" value=(match.played ? match.set1.p1 : '') disabled=match.played)
-                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="1" data-player="p2" value=(match.played ? match.set1.p2 : '') disabled=match.played)
+                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px;" data-match=index data-set="1" data-player="p1" value=(match.played ? match.set1.p1 : '') disabled=match.played)
+                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px;" data-match=index data-set="1" data-player="p2" value=(match.played ? match.set1.p2 : '') disabled=match.played)
                       
-                      //- SET 2
                       .text-center.border-start.border-end.px-2
-                        small.d-block.text-muted(style="font-size: 0.6rem;") SET 2
+                        small.d-block.text-muted.fw-bold(style="font-size: 0.65rem;") SET 2
                         .d-flex.gap-1
-                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="2" data-player="p1" value=(match.played ? match.set2.p1 : '') disabled=match.played)
-                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="2" data-player="p2" value=(match.played ? match.set2.p2 : '') disabled=match.played)
+                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px;" data-match=index data-set="2" data-player="p1" value=(match.played ? match.set2.p1 : '') disabled=match.played)
+                          input.form-control.form-control-sm.text-center.sim-input(type="number" style="width:52px; height:38px;" data-match=index data-set="2" data-player="p2" value=(match.played ? match.set2.p2 : '') disabled=match.played)
                       
-                      //- TIE-BREAKÃO (Com borda e destaque para os dois dígitos)
                       .text-center.bg-warning.bg-opacity-10.rounded.px-1
-                        small.d-block.text-danger.fw-bold(style="font-size: 0.55rem;") TIE-BREAK
+                        small.d-block.text-danger.fw-bold(style="font-size: 0.65rem;") TIE-BREAKÃO
                         .d-flex.gap-1
-                          input.form-control.form-control-sm.text-center.sim-input.border-danger.fw-bold(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="3" data-player="p1" value=(match.set3 && match.played ? match.set3.p1 : '') disabled=match.played)
-                          input.form-control.form-control-sm.text-center.sim-input.border-danger.fw-bold(type="number" style="width:52px; height:38px; padding: 2px;" data-match=index data-set="3" data-player="p2" value=(match.set3 && match.played ? match.set3.p2 : '') disabled=match.played)
+                          input.form-control.form-control-sm.text-center.sim-input.border-danger.fw-bold(type="number" style="width:52px; height:38px;" data-match=index data-set="3" data-player="p1" value=(match.set3 && match.played ? match.set3.p1 : '') disabled=match.played)
+                          input.form-control.form-control-sm.text-center.sim-input.border-danger.fw-bold(type="number" style="width:52px; height:38px;" data-match=index data-set="3" data-player="p2" value=(match.set3 && match.played ? match.set3.p2 : '') disabled=match.played)
                   
-                  //- Jogador 2
-                  .col-3.text-start
-                    span.fw-bold.small(class=match.played ? 'text-muted' : '')= match.player2
+                  //- Jogador 2: Alinhado à ESQUERDA (olhando para o placar)
+                  .col-12.col-md-3.text-center.text-md-start.ps-md-3.mt-2.mt-md-0
+                    span.fw-bold.small.text-uppercase(style="font-size: 0.85rem;")= match.player2
 
       //- COLUNA DA TABELA (Fixed)
       .col-lg-5
