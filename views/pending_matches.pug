@@ -300,16 +300,76 @@ block content
             // Lógica de Permissão de Edição
             const userEmail = user ? user.email : null;
             const canEdit = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email);
-    
-            // Construção do Card da Partida
+            const delay = (index % 5) * 50;
+            const scoreHtml = match.played
+            ? `<div class="d-flex justify-content-center gap-1">
+                 <span class="badge bg-dark">${match.set1.p1}-${match.set1.p2}</span>
+                 <span class="badge bg-dark">${match.set2.p1}-${match.set2.p2}</span>
+                 ${match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
+                   ? `<span class="badge bg-danger">TB:${match.set3.p1}-${match.set3.p2}</span>`
+                   : ''}
+               </div>`
+            : `<span class="text-muted">vs</span>`;
             const matchHTML = `
+                <div class="card mb-2 border-0 shadow-sm" ${match.played ? 'bg-light' : ''}" data-aos="fade-up" data-aos-delay="${delay}">
+                  <!-- A classe 'bg-light' deve ser adicionada dinamicamente se o jogo estiver finalizado -->
+                  <div class="card-body py-3" id="match-row-${match._id}">
+
+                    <div class="row align-items-center">
+
+                      <!-- Status -->
+                      <div class="col-md-2 text-center border-end">
+                        <!-- Classe muda entre 'bg-secondary' (finalizado) e 'bg-warning text-dark' (pendente) -->
+                        <span class="badge rounded-pill ${match.played ? 'bg-secondary' : 'bg-warning text-dark'}" id="status-${match._id}">
+                          PENDENTE
+                        </span>
+                      </div>
+
+                      <!-- Confronto -->
+                      <div class="col-md-8">
+                        <div class="row align-items-center text-center" id="match-row-${match._id}">
+
+                          <!-- Jogador 1 -->
+                          <div class="col-12.col-md-3 mb-2 mb-md-0">
+                            <span class="fw-bold text-uppercase small">${match.player1}</span>
+                          </div>
+
+                          <!-- Container do Placar -->
+                          <div class="col-12 col-md-6 my-2 my-md-0" id="score-container-${match._id}">
+                            <!-- Se jogado, exibe os badges; se não, exibe o 'vs' -->
+                            ${scoreHtml}
+                          </div>
+
+                          <!-- Jogador 2 -->
+                          <div class="col-12 col-md-3 mt-2 mt-md-0">
+                            <span class="fw-bold text-uppercase small">${match.player2}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Ação -->
+                      <div class="col-md-2 text-end" id="action-container-${match._id}">
+                         ${canEdit ? `
+                             <button class="btn btn-sm w-100 ${match.played ? 'btn-outline-secondary' : 'btn-success'}"
+                                     onclick='enableInlineEdit("${match._id}", ${JSON.stringify(match)})'>
+                                 <i class="bi bi-pencil-square me-1"></i>
+                                 ${match.played ? 'Alterar' : 'Salvar'}
+                             </button>
+                         ` : '<span class="badge bg-light text-muted">Somente visualização</span>'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            `;
+            // Construção do Card da Partida
+            const matchHTML2 = `
                 <div class="card mb-2 border-0 shadow-sm ${match.played ? 'bg-light' : ''}" data-aos="fade-up" id="match-card-${match._id}">
                     <div class="card-body py-3" id="match-row-${match._id}">
                         <div class="row align-items-center">
                             <!-- Status -->
                             <div class="col-md-2 text-center border-end">
                                 <span class="badge rounded-pill ${match.played ? 'bg-secondary' : 'bg-warning text-dark'}">
-                                    ${match.played ? 'COMPLETED' : 'PENDING'}
+                                    ${match.played ? 'FINALIZADO' : 'PENDENTE'}
                                 </span>
                             </div>
     
