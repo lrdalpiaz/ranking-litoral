@@ -321,7 +321,7 @@ block content
                       <div class="col-md-2 text-center border-end">
                         <!-- Classe muda entre 'bg-secondary' (finalizado) e 'bg-warning text-dark' (pendente) -->
                         <span class="badge rounded-pill ${match.played ? 'bg-secondary' : 'bg-warning text-dark'}" id="status-${match._id}">
-                          PENDENTE
+                          ${match.played ? 'FINALIZADO' : 'PENDENTE'}
                         </span>
                       </div>
 
