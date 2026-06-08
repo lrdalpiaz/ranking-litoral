@@ -54,11 +54,12 @@ const calculateStanding = (players, matches) => {
 
         const tiedNames = Object.values(stats).filter(p => p.points === a.points).map(p => p.name);
 
+        console.log(tiedNames);
         // SITUAÇÃO 1: Empate entre 2 (Confronto Direto)
         if (tiedNames.length === 2) {
             const m = playedMatches.find(m => (tiedNames.includes(m.player1) && tiedNames.includes(m.player2)));
             if (m) {
-                const p1Win = (parseInt(m.s1p1) > parseInt(m.s1p2) && parseInt(m.s2p1) > parseInt(m.s2p2)) || parseInt(m.s3p1) > parseInt(m.s3p2);
+                const p1Win = (parseInt(m.set1.p1) > parseInt(m.set1.p2) && parseInt(m.set2.p1) > parseInt(m.set2.p2)) || parseInt(m.set3.p1) > parseInt(m.set3.p2);
                 const winner = p1Win ? m.player1 : m.player2;
                 return winner === a.name ? -1 : 1;
             }
@@ -75,9 +76,9 @@ const calculateStanding = (players, matches) => {
                 if (tiedNames.includes(m.player1) && tiedNames.includes(m.player2)) {
                     if (m.player1 === player.name || m.player2 === player.name) {
                         const isP1 = m.player1 === player.name;
-                        const p1W = (parseInt(m.s1p1) > parseInt(m.s1p2) && parseInt(m.s2p1) > parseInt(m.s2p2)) || parseInt(m.s3p1) > parseInt(m.s3p2);
+                        const p1W = (parseInt(m.set1.p1) > parseInt(m.set1.p2) && parseInt(m.set2.p1) > parseInt(m.set2.p2)) || parseInt(m.set3.p1) > parseInt(m.set3.p2);
                         const won = isP1 ? p1W : !p1W;
-                        const tb = (parseInt(m.s3p1) || 0) + (parseInt(m.s3p2) || 0) > 0;
+                        const tb = (parseInt(m.set3.p1) || 0) + (parseInt(m.set3.p2) || 0) > 0;
                         if (won) p += tb ? 2 : 3; else if (tb) p += 1;
                     }
                 }
