@@ -1,0 +1,210 @@
+extends layout
+
+block content
+  //- =========================================================================
+  //- 1. DEFINIÇÃO DOS MIXINS (Sempre no topo para o Pug conhecer antes de chamar)
+  //- =========================================================================
+  mixin renderPlayoffCard(match)
+    .card.mb-3.border-0.shadow-sm.bg-white
+      .card-body.p-3
+        //- Identificador discreto da chave (Ex: Q1, S1) no topo do card
+        .d-flex.justify-content-between.mb-2
+          span.badge.bg-light.text-dark.small.font-monospace(style="font-size: 0.65rem;")= match.playoffKey
+          span.badge.rounded-pill(class=match.played ? 'bg-secondary' : 'bg-warning text-dark' style="font-size: 0.6rem;")
+            = match.played ? 'COMPLETED' : 'PENDING'
+
+        .d-flex.flex-column.gap-3
+          //- Linha do Jogador 1
+          .d-flex.justify-content-between.align-items-center
+            .d-flex.align-items-center.gap-2
+              if match.player1 && match.player1 !== ""
+                span.small.fw-bold(class=(match.played && ((match.set1.p1 > match.set1.p2 && match.set2.p1 > match.set2.p2) || (match.set3 && match.set3.p1 > match.set3.p2)) ? 'text-success' : ''))= match.player1
+              else if match.playoffStage === 'semifinal'
+                i.bi.bi-hourglass-split.text-muted
+                span.small.text-muted.fst-italic= match.playoffKey === 'S1' ? 'Vencedor de Q1' : 'Vencedor de Q3'
+              else if match.playoffStage === 'final'
+                i.bi.bi-hourglass-split.text-muted
+                span.small.text-muted.fst-italic Vencedor de S1
+              else
+                i.bi.bi-person.text-muted
+                if match.player1Source && match.player1Source.position === 101
+                  span.small.text-muted.fst-italic 🥇 Melhor 3º Geral
+                else if match.player1Source && match.player1Source.position === 102
+                  span.small.text-muted.fst-italic 🥈 2º Melhor 3º Geral
+                else if match.player1Source
+                  span.small.text-muted.fst-italic= `${match.player1Source.position}º Grupo ${match.player1Source.groupNumber}`
+            
+            if match.played
+              span.badge.bg-dark.font-monospace= `${match.set1.p1}-${match.set1.p2}`
+
+          hr.my-1.opacity-25
+
+          //- Linha do Jogador 2
+          .d-flex.justify-content-between.align-items-center
+            .d-flex.align-items-center.gap-2
+              if match.player2 && match.player2 !== ""
+                span.small.fw-bold(class=(match.played && ((match.set1.p2 > match.set1.p1 && match.set2.p2 > match.set2.p1) || (match.set3 && match.set3.p2 > match.set3.p1)) ? 'text-success' : ''))= match.player2
+              else if match.playoffStage === 'semifinal'
+                i.bi.bi-hourglass-split.text-muted
+                span.small.text-muted.fst-italic= match.playoffKey === 'S1' ? 'Vencedor de Q2' : 'Vencedor de Q4'
+              else if match.playoffStage === 'final'
+                i.bi.bi-hourglass-split.text-muted
+                span.small.text-muted.fst-italic Vencedor de S2
+              else
+                i.bi.bi-person.text-muted
+                if match.player2Source && match.player2Source.position === 101
+                  span.small.text-muted.fst-italic 🥇 Melhor 3º Geral
+                else if match.player2Source && match.player2Source.position === 102
+                  span.small.text-muted.fst-italic 🥈 2º Melhor 3º Geral
+                else if match.player2Source
+                  span.small.text-muted.fst-italic= `${match.player2Source.position}º Grupo ${match.player2Source.groupNumber}`
+            
+            if match.played
+              span.badge.bg-dark.font-monospace= `${match.set2.p1}-${match.set2.p2}`
+
+          //- Exibição de Super Tie-break caso tenha ocorrido
+          if match.played && match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
+            .text-center.mt-1.bg-danger.bg-opacity-10.rounded.py-1
+              span.text-danger.fw-bold(style="font-size: 0.7rem;") Super TB: #{match.set3.p1} - #{match.set3.p2}
+
+        //- Área de Edição In-line (Libera o botão de Score se os dois nomes já existirem)
+        - var userEmail = user ? user.email : null
+        - var canEditPlayoff = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email)
+        if canEditPlayoff && match.player1 && match.player2 && match.player1 !== "" && match.player2 !== ""
+          .mt-3.pt-2.border-top.text-end
+            a.btn.btn-sm.btn-outline-success.w-100(href=`/matches/score/${match._id}` style="font-size: 0.75rem;")
+              i.bi.bi-pencil-square.me-1
+              | Lançar Placar do Confronto
+
+  //- =========================================================================
+  //- 2. ESTILOS LOCAIS
+  //- =========================================================================
+  style.
+    .btn-playoff-admin {
+      height: 38px; 
+      color: #1b4d3e !important; 
+      border-color: #1b4d3e !important; 
+      font-size: 0.75rem; 
+      letter-spacing: 0.5px;
+      background-color: transparent !important;
+      transition: all 0.2s ease-in-out;
+    }
+    .btn-playoff-admin:hover {
+      background-color: #1b4d3e !important;
+      color: #ffffff !important;
+      border-color: #1b4d3e !important;
+    }
+
+  //- =========================================================================
+  //- 3. CONTEÚDO DA PÁGINA
+  //- =========================================================================
+  .container.mt-4#main-container(data-tournament=selectedTournament data-class=selectedClass)
+    .d-flex.flex-column.flex-md-row.justify-content-between.align-items-md-center.gap-3.mb-4(data-aos="fade-down")
+      div
+        h2.fw-bold.text-uppercase(style="letter-spacing: 1px;") 🏆 Playoffs & Bracket
+        p.text-muted.small.mb-0 Chave eliminatória automatizada rumo ao título do Litoral Tour
+      
+      //- Ações exclusivas do Administrador
+      if user && user.role === 'admin'
+        .d-flex.flex-wrap.align-items-center.gap-2
+          a.btn.btn-sm.btn-playoff-admin.d-inline-flex.align-items-center.fw-bold.shadow-sm.text-uppercase(
+            href=`/playoffs/admin?tournamentId=${selectedTournament}&class=${selectedClass}`
+          ) 
+            i.bi.bi-gear-fill.me-1
+            | ESTRUTURAR CHAVE
+          
+          button.btn.btn-sm.btn-playoff-admin.d-inline-flex.align-items-center.fw-bold.shadow-sm.text-uppercase(
+            onclick=`syncPlayoffPlayers('${selectedTournament}')`
+          )
+            i.bi.bi-lightning-charge-fill.me-1
+            | ATUALIZAR CLASSIFICADOS
+
+    //- Barra de Filtros (Torneio + Classe)
+    .card.mb-5.border-0.shadow-sm(data-aos="fade-down" data-aos-delay="100")
+      .card-body.bg-white
+        .row.g-3.align-items-end
+          .col-md-4
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Torneio / Temporada
+            select.form-select.form-select-sm.border-success(style="height: 38px;" onchange=`location.href='/playoffs/matches?tournamentId=' + this.value + '&class=${selectedClass}'`)
+              if tournaments && tournaments.length > 0
+                each t in tournaments
+                  option(value=t._id.toString() selected=(t._id.toString() === selectedTournament))= t.name
+              else
+                option(disabled) Nenhum torneio encontrado
+          
+          .col-md-8
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Classe Playoffs
+            .btn-group.w-100(style="height: 38px;")
+              each c in ['A', 'B', 'C', 'D', 'E']
+                a.btn.btn-sm.d-flex.align-items-center.justify-content-center(
+                  href=`/playoffs/matches?tournamentId=${selectedTournament}&class=${c}` 
+                  class=(selectedClass == c ? 'btn-success fw-bold' : 'btn-outline-success')
+                  style="flex: 1; font-size: 0.85rem;"
+                )= `Classe ${c}`
+
+    //- Layout da Árvore de Torneio (Bracket Responsivo)
+    if stages && (stages.quartas.length > 0 || stages.semifinal.length > 0 || stages.final.length > 0)
+      .row.g-4.match-bracket.align-items-center
+        
+        //- COLUNA: QUARTAS DE FINAL
+        .col-12.col-lg-4(data-aos="fade-right" data-aos-delay="150")
+          h5.text-uppercase.fw-bold.text-center.mb-4(style="color: var(--clay-orange); letter-spacing: 1px;") 
+            i.bi.bi-diagram-3.me-2
+            | Quartas de Final
+          
+          if stages.quartas.length > 0
+            each match in stages.quartas
+              +renderPlayoffCard(match)
+          else
+            .text-center.py-4.text-muted.small.border.border-dashed Nenhuma chave de Quartas gerada.
+
+        //- COLUNA: SEMIFINAL
+        .col-12.col-lg-4(data-aos="fade-up" data-aos-delay="250")
+          h5.text-uppercase.fw-bold.text-center.mb-4(style="color: var(--clay-orange); letter-spacing: 1px;") 
+            i.bi.bi-trophy.me-2
+            | Semifinal
+          
+          if stages.semifinal.length > 0
+            each match in stages.semifinal
+              +renderPlayoffCard(match)
+          else
+            .text-center.py-4.text-muted.small.border.border-dashed Nenhuma chave de Semifinal gerada.
+
+        //- COLUNA: GRANDE FINAL
+        .col-12.col-lg-4(data-aos="fade-left" data-aos-delay="350")
+          h5.text-uppercase.fw-bold.text-center.mb-4(style="color: #ffd700; text-shadow: 0 0 10px rgba(219,176,0,0.2); letter-spacing: 1px;") 
+            i.bi.bi-award-fill.me-2
+            | Grande Final
+          
+          if stages.final.length > 0
+            each match in stages.final
+              +renderPlayoffCard(match)
+          else
+            .text-center.py-4.text-muted.small.border.border-dashed Nenhuma chave de Final gerada.
+    else
+      .text-center.py-5.card.border-0.shadow-sm(data-aos="zoom-in")
+        i.bi.bi-diagram-2.display-1.text-muted
+        p.lead.mt-3 Nenhuma estrutura de Playoff configurada para a Classe #{selectedClass}.
+        if user && user.role === 'admin'
+          p.text-muted Clique em "Estruturar Chave" no topo para gerar o chaveamento automatizado de uma vez só.
+
+  //- SCRIPT DE COMUNICAÇÃO DE ADMIN
+  if user && user.role === 'admin'
+    script.
+      async function syncPlayoffPlayers(tId) {
+        if(!confirm("Confirmar cálculo automático da Fase de Grupos e preenchimento dos atletas das Quartas de Final?")) return;
+        
+        try {
+          const response = await fetch(`/playoffs/lock-groups/${tId}`, { method: 'POST' });
+          const result = await response.json();
+          if(result.success) {
+            alert(result.message);
+            window.location.reload();
+          } else {
+            alert("Erro: " + result.error);
+          }
+        } catch(err) {
+          alert("Erro na comunicação com o servidor.");
+        }
+      }
+        

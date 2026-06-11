@@ -59,6 +59,7 @@ const calculateStanding = (players, matches) => {
         if (tiedNames.length === 2) {
             const m = playedMatches.find(m => (tiedNames.includes(m.player1) && tiedNames.includes(m.player2)));
             if (m) {
+                console.log("Empate:", m);
                 const p1Win = (parseInt(m.set1.p1) > parseInt(m.set1.p2) && parseInt(m.set2.p1) > parseInt(m.set2.p2)) || parseInt(m.set3.p1) > parseInt(m.set3.p2);
                 const winner = p1Win ? m.player1 : m.player2;
                 return winner === a.name ? -1 : 1;

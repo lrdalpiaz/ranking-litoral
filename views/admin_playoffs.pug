@@ -1,0 +1,70 @@
+extends layout
+
+block content
+  .container.mt-4(data-aos="fade-up")
+    //- Cabeçalho da Página
+    .d-flex.flex-column.flex-md-row.justify-content-between.align-items-md-center.gap-3.mb-4
+      div
+        h2.fw-bold.text-uppercase(style="letter-spacing: 1px;") ⚙️ Configurar Chave de Playoffs
+        p.text-muted.small.mb-0 Defina as vagas das 4 Quartas de Final. O restante da chave avançará sozinho.
+      
+      a.btn.btn-sm.btn-outline-success.d-inline-flex.align-items-center.fw-bold.shadow-sm.text-uppercase(
+        href=`/playoffs/matches?tournamentId=${selectedTournament}&class=${selectedClass}`
+        style="height: 38px; color: #1b4d3e; border-color: #1b4d3e; font-size: 0.75rem; letter-spacing: 0.5px;"
+      )
+        i.bi.bi-arrow-left.me-2
+        | Voltar para a Chave
+
+    //- Formulário de Criação Automática do Chaveamento
+    form(action="/playoffs/setup-bracket" method="POST")
+      input(type="hidden" name="tournamentId" value=selectedTournament)
+      input(type="hidden" name="class" value=selectedClass)
+
+      //- CORREÇÃO: Adicionado o array [1, 2, 3, 4] explicitamente para corrigir o "malformed each"
+      each qNum in [1, 2, 3, 4]
+        .card.mb-3.border-0.shadow-sm(style="overflow: hidden;")
+          //- Fundo Verde Floresta blindado com linha inferior Laranja Saibro
+          .py-2.px-3(style="background: #1b4d3e !important; border-bottom: 3px solid #d35400 !important;")
+            h6.mb-0.fw-bold.small.text-uppercase(style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);")= `QUARTAS ${qNum}`
+          
+          .card-body.bg-white.p-3
+            .row.g-3.align-items-center.text-center
+              
+              //- Seleção do Atleta 1 (Lado Esquerdo)
+              .col-12.col-md-5.p-3.bg-light.rounded.border
+                label.small.text-uppercase.fw-bold.text-muted.mb-2.d-block 👤 Atleta 1
+                select.form-select.form-select-sm.border-success(name=`q${qNum}_p1` style="height: 40px;" required)
+                  option(value="") Selecione quem ocupa esta vaga...
+                  if activeGroups && activeGroups.length > 0
+                    each g in activeGroups
+                      option(value=`${g}-1`) 1º Colocado do Grupo #{g}
+                      option(value=`${g}-2`) 2º Colocado do Grupo #{g}
+                  
+                  //- Opções de repescagem unificadas no fim do seletor
+                  option(value="101") 🥇 Melhor 3º Colocado Geral
+                  option(value="102") 🥈 2º Melhor 3º Colocado Geral
+              
+              //- Divisor VS
+              .col-12.col-md-2.fw-900.text-muted.my-2.my-md-0 VS
+
+              //- Seleção do Atleta 2 (Lado Direito)
+              .col-12.col-md-5.p-3.bg-light.rounded.border
+                label.small.text-uppercase.fw-bold.text-muted.mb-2.d-block 👤 Atleta 2
+                select.form-select.form-select-sm.border-success(name=`q${qNum}_p2` style="height: 40px;" required)
+                  option(value="") Selecione quem ocupa esta vaga...
+                  if activeGroups && activeGroups.length > 0
+                    each g in activeGroups
+                      option(value=`${g}-1`) 1º Colocado do Grupo #{g}
+                      option(value=`${g}-2`) 2º Colocado do Grupo #{g}
+                  
+                  option(value="101") 🥇 Melhor 3º Colocado Geral
+                  option(value="102") 🥈 2º Melhor 3º Colocado Geral
+
+      //- Botão de Envio
+      .text-end.mt-4
+        button.btn.btn-success.px-5.text-uppercase.fw-bold.shadow-sm(
+          type="submit" 
+          style="height: 45px; font-size: 0.85rem; letter-spacing: 0.5px;"
+        )
+          i.bi.bi-diagram-3-fill.me-2
+          | Gerar Chave Completa Automatizada

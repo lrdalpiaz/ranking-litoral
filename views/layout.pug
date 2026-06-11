@@ -67,19 +67,71 @@ html(lang="pt-br")
         padding: 1.2rem;
       }
 
-      /* Botões e Badges */
-      .btn-success {
-        background-color: var(--clay-orange);
-        border: none;
-        border-radius: 2px;
-        padding: 10px 25px;
-        text-transform: uppercase;
-        font-weight: 700;
-        transition: 0.3s;
+      /* 1. Botão Selecionado / Sólido / Ativo (Estilo Saibro) */
+      .btn-success,
+      .btn-success:active,
+      .btn-success:focus,
+      .btn-group .btn-success.active,
+      .btn-outline-success.active,
+      .btn-group .btn-outline-success.active {
+        background-color: #d35400 !important; /* Laranja Saibro */
+        border-color: #d35400 !important;
+        color: #ffffff !important;
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(211, 84, 0, 0.2);
       }
-      .btn-success:hover {
-        background-color: var(--clay-dark);
-        transform: translateY(-1px);
+      
+      .btn-success:hover,
+      .btn-outline-success.active:hover,
+      .btn-group .btn-outline-success.active:hover {
+        background-color: #b84600 !important; /* Saibro um pouco mais escuro no hover */
+        border-color: #b84600 !important;
+        color: #ffffff !important;
+      }
+    
+      /* 2. Botão de Contorno / Não Selecionado (Verde Floresta) */
+      .btn-outline-success {
+        color: #1b4d3e !important;
+        border-color: #1b4d3e !important;
+        background-color: transparent !important;
+        font-weight: bold;
+        transition: all 0.2s ease-in-out;
+      }
+      
+      /* Hover no botão não selecionado: vira Verde Floresta antes de ser clicado */
+      .btn-outline-success:hover {
+        background-color: #1b4d3e !important;
+        border-color: #1b4d3e !important;
+        color: #ffffff !important;
+      }
+    
+      /* 3. Badges e Backgrounds de Sucesso */
+      .bg-success {
+        background-color: #1b4d3e !important;
+        color: #ffffff !important;
+      }
+    
+      /* 4. Destaque das Tabelas de Classificados (Fase Inicial e Simulador) */
+      .table-success,
+      tr.table-success td {
+        background-color: rgba(27, 77, 62, 0.12) !important; /* 12% de opacidade do Verde Floresta */
+        color: #1b4d3e !important;
+        --bs-table-accent-bg: transparent !important;
+      }
+      /* Borda lateral sofisticada para a zona de classificação */
+      table tbody tr.table-success td:first-child {
+        border-left: 5px solid #1b4d3e !important;
+      }
+    
+      /* 5. Campos de Seleção e Inputs do Torneio */
+      .form-select.border-success,
+      .form-control.border-success {
+        border-color: #1b4d3e !important;
+      }
+      .form-select:focus,
+      .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(27, 77, 62, 0.25) !important;
+        border-color: #1b4d3e !important;
       }
 
       .table thead {
@@ -88,18 +140,6 @@ html(lang="pt-br")
       }
       .table-hover tbody tr:hover {
         background-color: rgba(211, 84, 0, 0.05);
-      }
-
-      tbody tr.table-success td, 
-      tbody tr.table-success {
-          background-color: rgba(27, 77, 62, 0.15) !important;
-          color: #1b4d3e !important;
-          --bs-table-accent-bg: transparent !important; /* Remove o degradê do Bootstrap */
-      }
-      
-      /* Adiciona a bordinha verde de "classificado" para o estilo Roland Garros */
-      tbody tr.table-success td:first-child {
-          border-left: 5px solid #1b4d3e !important;
       }
 
       td.table-primary {
@@ -112,28 +152,28 @@ html(lang="pt-br")
           background-color: rgba(13, 110, 253, 0.05) !important;
       }
 
-      .btn-outline-clay {
-        color: #1b4d3e !important; /* Verde escuro nítido */
-        background-color: transparent;
-        border: 2px solid #1b4d3e !important;
-        font-weight: 700;
-        text-transform: uppercase;
-        transition: all 0.2s ease-in-out;
-        opacity: 1 !important; /* Garante que não esteja transparente */
-      }
-      
-      /* ESTADO SELECIONADO / HOVER: Muda para Laranja Saibro */
-      .btn-outline-clay:hover, 
-      .btn-outline-clay.active,
-      .nav-pills .nav-link.active {
-        background-color: #d35400 !important; 
-        border-color: #d35400 !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 10px rgba(211, 84, 0, 0.3);
-      }
-           /* Ajuste para garantir que o Bootstrap não mude a cor do texto das abas */
+      /* Estado Normal: Força o Verde Floresta e remove cinzas padrões do Bootstrap */
+      .nav-pills .nav-link,
+      .btn-outline-clay,
       .nav-pills .nav-link:not(.active) {
         color: #1b4d3e !important;
+        border: 2px solid #1b4d3e !important;
+        background-color: transparent !important;
+        font-weight: bold;
+        text-transform: uppercase;
+        transition: all 0.2s ease-in-out;
+        opacity: 1 !important;
+      }
+    
+      /* Estado Hover e Ativo: Força o Laranja Saibro com texto Branco */
+      .nav-pills .nav-link:hover,
+      .btn-outline-clay:hover,
+      .nav-pills .nav-link.active,
+      .btn-outline-clay.active {
+        background-color: #d35400 !important; /* Laranja Saibro */
+        border-color: #d35400 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 8px rgba(211, 84, 0, 0.2) !important;
       }
       /* Badge de destaque */
       .badge.bg-dark { background-color: var(--forest-green) !important; }
@@ -162,6 +202,10 @@ html(lang="pt-br")
               a.nav-link(href="/matches/pending") 
                 i.bi.bi-calendar3.me-1
                 | Agenda
+            li.nav-item
+              a.nav-link(href="/playoffs/matches") 
+                i.bi.bi-diagram-3.me-1
+                | Playoffs
             if user
               if user.role === 'admin'
                 li.nav-item

@@ -1,54 +1,126 @@
 extends layout
 
 block content
-  .container.mt-4
-    h2.text-center.mb-4 🎾 Classificação
+  .container.mt-4#main-container(data-tournament=selectedTournament)
+    .d-flex.flex-column.flex-md-row.justify-content-between.align-items-md-center.gap-3.mb-4(data-aos="fade-down")
+      div
+        h2.fw-bold.text-uppercase(style="letter-spacing: 1px;") 📊 Classificação Oficial
+        p.text-muted.small.mb-0 Confira os líderes e a zona de classificação do Litoral Tour
+      
+      a.btn.btn-sm.btn-outline-success.d-inline-flex.align-items-center.fw-bold.shadow-sm.text-uppercase(
+        href=`/simulator?tournamentId=${selectedTournament}`
+        style="height: 38px; color: #1b4d3e; border-color: #1b4d3e; font-size: 0.75rem; letter-spacing: 0.5px;"
+      )
+        i.bi.bi-magic.me-2
+        | Simular Resultados
 
-    //- 1. Abas de Classes (Navegação)
-    ul.nav.nav-pills.justify-content-center.mb-5#classTabs(role="tablist")
-      each cls, index in Object.keys(tournamentData).sort()
-        li.nav-item(role="presentation")
-          button.nav-link.btn-outline-clay(
-            class=index === 0 ? 'active' : '' 
-            id=`tab-${cls}` 
-            data-bs-toggle="pill" 
-            data-bs-target=`#content-${cls}` 
-            type="button" 
-            role="tab"
-          ) Classe #{cls}
+    //- BARRA DE FILTROS PADRONIZADA (Torneio + Classe)
+    .card.mb-5.border-0.shadow-sm(data-aos="fade-down" data-aos-delay="100")
+      .card-body.bg-white
+        .row.g-3.align-items-end
+          //- Filtro de Torneio / Temporada (33% da largura)
+          .col-md-4
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Torneio / Temporada
+            select.form-select.form-select-sm.border-success(style="height: 38px;" onchange=`location.href='/ranking?tournamentId=' + this.value`)
+              if tournaments && tournaments.length > 0
+                each t in tournaments
+                  option(value=t._id.toString() selected=(t._id.toString() === selectedTournament))= t.name
+              else
+                option(disabled) Nenhum torneio encontrado
+          
+          //- Filtro de Classes usando Nav-Pills (66% da largura)
+          .col-md-8
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Classe Classificação
+            ul.nav.nav-pills.w-100#classTabs(role="tablist" style="height: 38px; display: flex; gap: 5px;")
+              - var activeClassSet = false
+              each cls in ['A', 'B', 'C', 'D', 'E']
+                - var hasData = tournamentData && tournamentData[cls] && Object.keys(tournamentData[cls]).length > 0
+                - var isFirst = !activeClassSet && hasData
+                if isFirst
+                  - activeClassSet = true
+                
+                li(style="flex: 1;")
+                  button.nav-link.w-100.h-100.d-flex.align-items-center.justify-content-center(
+                    class=isFirst ? 'active' : ''
+                    id=`tab-${cls}`
+                    data-bs-toggle="pill"
+                    data-bs-target=`#class-${cls}`
+                    type="button"
+                    role="tab"
+                    style="font-size: 0.85rem;"
+                    disabled=!hasData
+                  )= `Classe ${cls}`
 
-    //- 2. Conteúdo das Abas
-    .tab-content
-      each cls, index in Object.keys(tournamentData).sort()
-        .tab-pane.fade(class=index === 0 ? 'show active' : '' id=`content-${cls}`)
-          .row
-            //- 3. Grupos dentro da Classe
-            each groupNum in Object.keys(tournamentData[cls]).sort()
-              .col-lg-6.mb-4
-                .card.shadow-sm
-                  .card-header.bg-tennis.text-muted.d-flex.justify-content-between
-                    h5.mb-0 Grupo #{groupNum}
-                    small Classe #{cls}
+    //- CONTEÚDO DAS TABELAS
+    - var activePaneSet = false
+    .tab-content.mt-4(data-aos="fade-up" data-aos-delay="200")
+      each cls in ['A', 'B', 'C', 'D', 'E']
+        - var hasData = tournamentData && tournamentData[cls] && Object.keys(tournamentData[cls]).length > 0
+        - var isFirstPane = !activePaneSet && hasData
+        if isFirstPane
+          - activePaneSet = true
+
+        .tab-pane.fade(id=`class-${cls}` class=isFirstPane ? 'show active' : '' role="tabpanel")
+          if hasData
+            each groupNumber in Object.keys(tournamentData[cls]).sort()
+              .mb-5
+                h5.fw-bold.text-uppercase.mb-3(style="color: var(--clay-orange); letter-spacing: 0.5px;") 👥 Grupo #{groupNumber}
+                .card.shadow-sm.border-0
                   .card-body.p-0
                     .table-responsive
-                      table.table.table-sm.table-hover.mb-0
+                      table.table.table-hover.mb-0(style="font-size: 0.9rem;")
                         thead.table-light
                           tr
-                            th.text-center #
-                            th Tenista
-                            th.text-center Pts
-                            th.text-center V
-                            th.text-center S
-                            th.text-center G
+                          th.text-center(style="width: 60px") #
+                          th.align-middle
+                            //- Adiciona o mesmo recuo invisível para alinhar o texto com os avatares abaixo
+                            .d-flex.align-items-center
+                              .d-inline-block(style="width: 20px; margin-right: 0.5rem; flex-shrink: 0;")
+                              span Atleta
+                          th.text-center(style="width: 80px") Pts
+                          th.text-center(style="width: 80px") V
+                          th.text-center(style="width: 90px") Sets (S)
+                          th.text-center(style="width: 90px") Games (G)
                         tbody
-                          - const athletes = Object.values(tournamentData[cls][groupNum]).sort((a,b) => b.points - a.points)
-                          each athlete, idx in athletes
-                            tr(class=idx < 2 ? 'table-success' : '')
-                              td.text-center= (idx + 1) + "º"
-                              td.fw-bold= athlete.name
-                              td.text-center.table-primary= athlete.points
-                              td.text-center= athlete.wins
-                              td.text-center= (athlete.sWon - athlete.sLost)
-                              td.text-center= (athlete.gFav - athlete.gAg)
+                          each athlete, idx in tournamentData[cls][groupNumber]
+                           tr(class=idx < 2 ? 'table-success' : '' style="transition: all 0.2s;")
+                             td.text-center.align-middle.fw-bold= idx + 1
+                             td.align-middle.fw-bold
+                               //- d-flex com gap alinha todos os blocos horizontalmente de forma idêntica
+                               .d-flex.align-items-center
+                                 //- Contêiner de tamanho fixo para o ícone de classificação (evita o desalinhamento)
+                                 .d-inline-block.text-center.me-2(style="width: 20px; flex-shrink: 0;")
+                                   if idx < 2
+                                     i.bi.bi-check-circle-fill.text-success(style="font-size: 0.85rem;")
+                                   else
+                                     //- Espaço vazio com a mesma largura para manter o alinhamento
+                                     span(style="display: inline-block; width: 20px;")
+                                   //- Nome do Atleta
+                                 span= athlete.name
+                             
+                             //- Coluna de pontos destacada em azul original
+                             td.text-center.align-middle.fw-bold.table-primary(style="background-color: rgba(13, 110, 253, 0.08) !important; color: #0a58ca !important;")= athlete.points
+                             
+                             td.text-center.align-middle= athlete.wins
+                             
+                             //- Saldo de Sets com formatação de cor (+ / -)
+                             - var setDiff = athlete.sWon - athlete.sLost
+                             td.text-center.align-middle(class=setDiff > 0 ? 'text-success fw-bold' : (setDiff < 0 ? 'text-danger' : 'text-muted'))
+                               = `${setDiff > 0 ? '+' : ''}${setDiff}`
+                             
+                             //- Saldo de Games com formatação de cor (+ / -)
+                             - var gameDiff = athlete.gFav - athlete.gAg
+                             td.text-center.align-middle(class=gameDiff > 0 ? 'text-success fw-bold' : (gameDiff < 0 ? 'text-danger' : 'text-muted'))
+                               = `${gameDiff > 0 ? '+' : ''}${gameDiff}`
+          else
+            //- Fallback caso a classe esteja oculta/vazia
+            .text-center.py-4.text-muted.small Nenhuns dados para esta classe.
+
+      if !activePaneSet
+        //- Mensagem caso o torneio inteiro não possua nenhuma partida gerada
+        .text-center.py-5.card.border-0.shadow-sm(data-aos="zoom-in")
+          i.bi.bi-clipboard-x.display-1.text-muted
+          p.lead.mt-3 Nenhuma chave de grupos gerada para este torneio.
+          p.text-muted Vincule jogadores às classes para computar os resultados.
 
     script(src="/javascripts/bootstrap.bundle.min.js")

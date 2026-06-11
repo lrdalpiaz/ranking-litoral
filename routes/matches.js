@@ -72,191 +72,143 @@ router.get('/score/:id', async (req, res) => {
 
 router.post('/update/:id', async (req, res) => {
     try {
-        const { s1p1, s1p2, s2p1, s2p2, s3p1, s3p2 } = req.body;
-        const match = await Match.findById(req.params.id);
-        const currentUserEmail = req.session.userEmail;
-      
-        const isOwner = currentUserEmail === match.player1Email || currentUserEmail === match.player2Email;
-        const isAdmin = req.session.role === 'admin';
-      
-        if (!isOwner && !isAdmin) {
-          return res.status(403).json({ error: 'Acesso negado' });
-        }
-        await Match.findByIdAndUpdate(req.params.id, {
-            set1: { p1: Number(s1p1), p2: Number(s1p2) },
-            set2: { p1: Number(s2p1), p2: Number(s2p2) },
-            set3: { p1: Number(s3p1) || 0, p2: Number(s3p2) || 0 },
+        const matchId = req.params.id;
+        
+        // 1. Captura os dados do formulário (converta para número para não dar NaN)
+        const s1p1 = parseInt(req.body.s1p1) || 0;
+        const s1p2 = parseInt(req.body.s1p2) || 0;
+        const s2p1 = parseInt(req.body.s2p1) || 0;
+        const s2p2 = parseInt(req.body.s2p2) || 0;
+        const s3p1 = parseInt(req.body.s3p1) || 0;
+        const s3p2 = parseInt(req.body.s3p2) || 0;
+
+        // 2. Atualiza a partida atual no banco de dados
+        const match = await Match.findByIdAndUpdate(matchId, {
+            set1: { p1: s1p1, p2: s1p2 },
+            set2: { p1: s2p1, p2: s2p2 },
+            set3: { p1: s3p1, p2: s3p2 },
             played: true
-        });
-        res.json({ success: true });
+        }, { new: true });
+
+        if (!match) return res.status(404).send("Partida não encontrada.");
+
+        // =====================================================================
+        // MOTOR DE AVANÇO AUTOMÁTICO (EFEITO DOMINÓ DOS PLAYOFFS)
+        // =====================================================================
+        if (match.isPlayoff && match.nextPlayoffKey) {
+            // Lógica oficial de tênis para descobrir o vencedor da partida
+            const setsP1 = (s1p1 > s1p2 ? 1 : 0) + (s2p1 > s2p2 ? 1 : 0);
+            const setsP2 = (s1p2 > s1p1 ? 1 : 0) + (s2p2 > s2p1 ? 1 : 0);
+            
+            let winnerName = "";
+            let winnerEmail = "";
+
+            // Verifica vitória direta por 2-0 ou decisão por Super Tie-break no 3º set
+            if (setsP1 === 2 || (setsP1 === 1 && setsP2 === 1 && s3p1 > s3p2)) {
+                winnerName = match.player1;
+                winnerEmail = match.player1Email;
+            } else {
+                winnerName = match.player2;
+                winnerEmail = match.player2Email;
+            }
+
+            // Prepara a query dinâmica para injetar no slot correto (player1 ou player2) da próxima fase
+            const updateNextStageQuery = {};
+            if (match.nextPlayoffSlot === 'player1') {
+                updateNextStageQuery.player1 = winnerName;
+                updateNextStageQuery.player1Email = winnerEmail;
+            } else {
+                updateNextStageQuery.player2 = winnerName;
+                updateNextStageQuery.player2Email = winnerEmail;
+            }
+
+            // Atualiza o próximo jogo da árvore (Ex: se completou Q1, atualiza S1)
+            await Match.updateOne({
+                tournamentId: match.tournamentId,
+                className: match.className,
+                playoffKey: match.nextPlayoffKey,
+                isPlayoff: true
+            }, updateNextStageQuery);
+        }
+
+        // =====================================================================
+        // REDIRECIONAMENTO INTELIGENTE (FIM DO JSON NA TELA)
+        // =====================================================================
+        if (match.isPlayoff) {
+            // Se for jogo de mata-mata, volta para a tela de chaves mantendo os filtros acesos
+            return res.redirect(`/playoffs/matches?tournamentId=${match.tournamentId}&class=${match.className}`);
+        } else {
+            // Se for jogo da fase de grupos comum, volta para a agenda padrão do torneio
+            const urlParams = new URLSearchParams(req.headers.referer ? new URL(req.headers.referer).search : "");
+            const activeGroup = urlParams.get('group') || match.groupNumber || "1";
+            return res.redirect(`/matches/pending?tournamentId=${match.tournamentId}&class=${match.className}&group=${activeGroup}`);
+        }
+
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        console.error("Erro ao salvar placar:", err);
+        res.status(500).send("Erro interno ao atualizar os resultados.");
     }
 });
 
 
 router.get('/ranking', async (req, res) => {
     try {
-        // 1. Busca todas as partidas (jogadas e pendentes para garantir que todos apareçam)
-        const allMatches = await Match.find().lean();
+        // 1. Busca todas as temporadas para preencher o seletor
+        const tournaments = await Tournament.find().sort({ startDate: -1 }).lean();
+        
+        // Se não houver torneio na URL, pega o mais recente como padrão
+        const selectedTournament = req.query.tournamentId || (tournaments.length > 0 ? tournaments[0]._id.toString() : null);
+
+        // 2. Busca apenas as partidas vinculadas ao torneio selecionado (sempre com .lean())
+        const allMatches = await Match.find({ tournamentId: selectedTournament }).lean();
         const tournamentData = {};
 
-        // 2. Organiza as partidas por Classe e depois por Grupo
+        // 3. Organiza as partidas por Classe e depois por Grupo
         allMatches.forEach(m => {
+            // Ignora partidas que não possuem classe ou grupo definidos no banco
+            if (!m.className || !m.groupNumber) return;
+
             if (!tournamentData[m.className]) tournamentData[m.className] = {};
             if (!tournamentData[m.className][m.groupNumber]) {
                 tournamentData[m.className][m.groupNumber] = [];
             }
             tournamentData[m.className][m.groupNumber].push(m);
         });
-        // 3. Processa o Ranking para cada Grupo individualmente
+
+        // 4. Processa o Ranking para cada Grupo individualmente
         for (let cls in tournamentData) {
             for (let grp in tournamentData[cls]) {
                 const matchesOfGroup = tournamentData[cls][grp];
                 
-                // Extrai atletas únicos deste grupo
-                const playersInGroup = [...new Set(matchesOfGroup.flatMap(m => [m.player1, m.player2]))];
+                // Extrai atletas únicos filtrando valores nulos, vazios ou folgas (BYE)
+                const playersInGroup = [...new Set(
+                    matchesOfGroup.flatMap(m => [m.player1, m.player2])
+                )].filter(name => name && name !== "BYE" && name !== "FOLGA");
                 
-                // Usa o motor centralizado (que considera apenas jogos 'played')
-                tournamentData[cls][grp] = calculateStanding(playersInGroup, matchesOfGroup);
+                // Executa o motor de cálculo apenas se houver jogadores no grupo
+                if (playersInGroup.length > 0) {
+                    tournamentData[cls][grp] = calculateStanding(playersInGroup, matchesOfGroup);
+                } else {
+                    tournamentData[cls][grp] = [];
+                }
             }
         }
-        
-        res.render('ranking', { tournamentData });
-        // Estrutura para armazenar os dados: { 'A': { '1': { 'Jogador': { stats } } } }
-        // const tournamentData = {};
 
-        // allPlayers.forEach(player => {
-        //     // Se você tiver múltiplos torneios/classes, a lógica abaixo 
-        //     // deve ser adaptada para saber em qual classe cada player está.
-        //     // Para simplificar, vamos inicializar conforme os dados das partidas:
-        // });
-        // const allMatches = await Match.find();
-        // allMatches.forEach(m => {
-        //     const { className, groupNumber, player1, player2 } = m;
+        // 5. Garante que as classes padrão existam no objeto para o Pug não dar erro de loop
+        ['A', 'B', 'C', 'D', 'E'].forEach(cls => {
+            if (!tournamentData[cls]) tournamentData[cls] = {};
+        });
 
-        //     if (!tournamentData[className]) tournamentData[className] = {};
-        //     if (!tournamentData[className][groupNumber]) tournamentData[className][groupNumber] = {};
-            
-        //     const group = tournamentData[className][groupNumber];
-
-        //     // Inicializa p1 e p2 se ainda não existirem no objeto do grupo
-        //     [player1, player2].forEach(name => {
-        //         if (!group[name]) {
-        //             group[name] = { 
-        //                 name, points: 0, wins: 0, losses: 0, 
-        //                 setsWon: 0, setsLost: 0, gFavor: 0, gAgainst: 0,
-        //                 matchesAgainst: {} 
-        //             };
-        //         }
-        //     });
-        // });
-
-        // matches.forEach(m => {
-        //     const { className, groupNumber, player1, player2, set1, set2, set3 } = m;
-
-        //     // Inicializa estrutura se não existir
-        //     if (!tournamentData[className]) tournamentData[className] = {};
-        //     if (!tournamentData[className][groupNumber]) tournamentData[className][groupNumber] = {};
-
-        //     const group = tournamentData[className][groupNumber];
-
-        //     [player1, player2].forEach(name => {
-        //         if (!group[name]) {
-        //             group[name] = {
-        //                 name, points: 0, wins: 0, losses: 0,
-        //                 setsWon: 0, setsLost: 0, gFavor: 0, gAgainst: 0,
-        //                 matchesAgainst: {} // Para conferir confronto direto
-        //             };
-        //         }
-        //     });
-
-        //     const p1 = group[player1];
-        //     const p2 = group[player2];
-
-        //     // Cálculo de Games (Apenas Sets 1 e 2)
-        //     p1.gFavor += (set1.p1 + set2.p1);
-        //     p1.gAgainst += (set1.p2 + set2.p2);
-        //     p2.gFavor += (set1.p2 + set2.p2);
-        //     p2.gAgainst += (set1.p1 + set2.p1);
-
-        //     // Cálculo de Sets (Sets 1 e 2 são normais)
-        //     let s1 = (set1.p1 > set1.p2 ? 1 : 0) + (set2.p1 > set2.p2 ? 1 : 0);
-        //     let s2 = (set1.p2 > set1.p1 ? 1 : 0) + (set2.p2 > set2.p1 ? 1 : 0);
-
-        //     // Lógica de Pontuação e Tiebreak (Set 3)
-        //     if (s1 === 2) { // 2-0 J1
-        //         p1.points += 3; p1.wins++; p2.losses++;
-        //         p1.setsWon += 2; p2.setsLost += 2;
-        //         p1.matchesAgainst[player2] = 'win';
-        //     } else if (s2 === 2) { // 2-0 J2
-        //         p2.points += 3; p2.wins++; p1.losses++;
-        //         p2.setsWon += 2; p1.setsLost += 2;
-        //         p1.matchesAgainst[player2] = 'loss';
-        //     } else {
-        //         // Empate 1-1 -> Decisão no Tiebreak (Set 3)
-        //         // Tiebreak conta como Set, mas no Saldo de Games vale apenas 1 ponto
-        //         if (set3.p1 > set3.p2) { // 2-1 J1
-        //             p1.points += 2; p2.points += 1;
-        //             p1.wins++; p2.losses++;
-        //             p1.setsWon += 2; p1.setsLost += 1;
-        //             p2.setsWon += 1; p2.setsLost += 2;
-        //             p1.gFavor += 1;
-        //             p1.matchesAgainst[player2] = 'win';
-        //         } else { // 2-1 J2
-        //             p2.points += 2; p1.points += 1;
-        //             p2.wins++; p1.losses++;
-        //             p2.setsWon += 2; p2.setsLost += 1;
-        //             p1.setsWon += 1; p1.setsLost += 2;
-        //             p2.gFavor += 1;
-        //             p1.matchesAgainst[player2] = 'loss';
-        //         }
-        //     }
-        // });
-
-        // // 2. Ordenação de cada grupo seguindo todos os critérios
-        // for (let cls in tournamentData) {
-        //     for (let gNum in tournamentData[cls]) {
-        //         const athletes = Object.values(tournamentData[cls][gNum]);
-
-        //         athletes.sort((a, b) => {
-        //             // Critério 1: Pontos
-        //             if (b.points !== a.points) return b.points - a.points;
-
-        //             // Critério 2: Confronto Direto (Se apenas 2 empatados)
-        //             const tied = athletes.filter(p => p.points === a.points);
-        //             if (tied.length === 2) {
-        //                 if (a.matchesAgainst[b.name] === 'win') return -1;
-        //                 if (a.matchesAgainst[b.name] === 'loss') return 1;
-        //             }
-
-        //             // Critério 3: Vitórias
-        //             if (b.wins !== a.wins) return b.wins - a.wins;
-
-        //             // Critério 4: Saldo de Sets
-        //             const aSetBalance = a.setsWon - a.setsLost;
-        //             const bSetBalance = b.setsWon - b.setsLost;
-        //             if (bSetBalance !== aSetBalance) return bSetBalance - aSetBalance;
-
-        //             // Critério 5: Saldo de Games (Incluindo bônus de tiebreak)
-        //             const aGameBalance = a.gFavor - a.gAgainst;
-        //             const bGameBalance = b.gFavor - b.gAgainst;
-        //             if (bGameBalance !== aGameBalance) return bGameBalance - aGameBalance;
-
-        //             // Critério 6: Aleatório (Sorte)
-        //             return 0.5 - Math.random();
-        //         });
-
-        //         tournamentData[cls][gNum] = athletes;
-        //     }
-        // }
-
-        // res.render('ranking', { tournamentData });
+        // 6. Envia todas as variáveis para o Pug
+        res.render('ranking', { 
+            tournamentData, 
+            tournaments, 
+            selectedTournament 
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Erro ao processar o ranking: " + err.message);
+        console.error("Erro no processamento do Ranking:", err);
+        res.status(500).send("Erro interno ao processar a tabela de classificação.");
     }
 });
-
 
 module.exports = router;
