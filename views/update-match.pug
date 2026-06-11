@@ -75,7 +75,7 @@ block content
                 .col-md-4
                   .card.border-0.shadow-sm.bg-warning.bg-opacity-10
                     .card-body.text-center
-                      label.form-label.fw-bold.text-danger Super Tiebreak
+                      label.form-label.fw-bold.text-danger TIE-BREAKÃO
                       .input-group
                         input.form-control.form-control-lg.text-center(
                           name="s3p1" 
@@ -90,7 +90,7 @@ block content
                           min="0" 
                           value=(match.set3 && match.set3.p2 !== undefined ? match.set3.p2 : "")
                         )
-                      small.text-muted.mt-2 (Only if 1-1 in sets)
+                      small.text-muted.mt-2 (Apenas se 1-1 nos sets)
 
               //- Ações do Formulário
               .d-grid.gap-2.mt-5
@@ -98,9 +98,15 @@ block content
                   i.bi.bi-save.me-2
 
                   | Salvar Resultado
-                a.btn.btn-outline-secondary(href=`/matches/pending?class=${match.className}&group=${match.groupNumber}`) 
-                  i.bi.bi-arrow-left-circle.me-2
-                  | Cancelar
+                if match.isPlayoff
+                  a.btn.btn-outline-secondary(href=`/playoffs/matches?tournamentId=${match.tournamentId}&class=${match.className}`) 
+                    i.bi.bi-arrow-left-circle.me-2
+                    | Cancelar
+                else
+                  a.btn.btn-outline-secondary(
+                    href=`/matches/pending?tournamentId=${match.tournamentId}&class=${match.className}&group=${match.groupNumber || 1}`)
+                    i.bi.bi-x-circle.me-1
+                    | Cancelar
 
     .row.justify-content-center.mt-2
       .col-md-8.text-center

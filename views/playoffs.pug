@@ -11,7 +11,7 @@ block content
         .d-flex.justify-content-between.mb-2
           span.badge.bg-light.text-dark.small.font-monospace(style="font-size: 0.65rem;")= match.playoffKey
           span.badge.rounded-pill(class=match.played ? 'bg-secondary' : 'bg-warning text-dark' style="font-size: 0.6rem;")
-            = match.played ? 'COMPLETED' : 'PENDING'
+            = match.played ? 'FINALIZADO' : 'PENDENTE'
 
         .d-flex.flex-column.gap-3
           //- Linha do Jogador 1
@@ -65,7 +65,7 @@ block content
           //- Exibição de Super Tie-break caso tenha ocorrido
           if match.played && match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
             .text-center.mt-1.bg-danger.bg-opacity-10.rounded.py-1
-              span.text-danger.fw-bold(style="font-size: 0.7rem;") Super TB: #{match.set3.p1} - #{match.set3.p2}
+              span.text-danger.fw-bold(style="font-size: 0.7rem;") TIE-BREAKÃO: #{match.set3.p1} - #{match.set3.p2}
 
         //- Área de Edição In-line (Libera o botão de Score se os dois nomes já existirem)
         - var userEmail = user ? user.email : null
@@ -101,8 +101,8 @@ block content
   .container.mt-4#main-container(data-tournament=selectedTournament data-class=selectedClass)
     .d-flex.flex-column.flex-md-row.justify-content-between.align-items-md-center.gap-3.mb-4(data-aos="fade-down")
       div
-        h2.fw-bold.text-uppercase(style="letter-spacing: 1px;") 🏆 Playoffs & Bracket
-        p.text-muted.small.mb-0 Chave eliminatória automatizada rumo ao título do Litoral Tour
+        h2.fw-bold.text-uppercase(style="letter-spacing: 1px;") 🏆 Playoffs
+        p.text-muted.small.mb-0 Chave eliminatória rumo ao título do Litoral Tour
       
       //- Ações exclusivas do Administrador
       if user && user.role === 'admin'
