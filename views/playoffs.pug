@@ -5,76 +5,87 @@ block content
   //- 1. DEFINIÇÃO DOS MIXINS (Sempre no topo para o Pug conhecer antes de chamar)
   //- =========================================================================
   mixin renderPlayoffCard(match)
-    .card.mb-3.border-0.shadow-sm.bg-white
-      .card-body.p-3
-        //- Identificador discreto da chave (Ex: Q1, S1) no topo do card
-        .d-flex.justify-content-between.mb-2
-          span.badge.bg-light.text-dark.small.font-monospace(style="font-size: 0.65rem;")= match.playoffKey
-          span.badge.rounded-pill(class=match.played ? 'bg-secondary' : 'bg-warning text-dark' style="font-size: 0.6rem;")
-            = match.played ? 'FINALIZADO' : 'PENDENTE'
+    //- CORREÇÃO: Note que todo o bloco abaixo ganhou 2 espaços extras de recuo
+    .card.mb-3.border-0.shadow-sm.bg-white(style="border-left: 4px solid var(--clay-orange) !important;")
+      .card-body.p-0
+        //- Faixa superior discreta com o código do jogo (Ex: Q1, S2)
+        .d-flex.justify-content-between.align-items-center.px-3.py-1.bg-light.border-bottom(style="font-size: 0.65rem;")
+          span.fw-bold.text-muted.font-monospace= match.playoffKey
+          span.fw-bold(class=match.played ? 'text-secondary' : 'text-danger')
+            = match.played ? 'ENCERRADO' : 'PENDENTE'
 
-        .d-flex.flex-column.gap-3
-          //- Linha do Jogador 1
-          .d-flex.justify-content-between.align-items-center
-            .d-flex.align-items-center.gap-2
+        //- Tabela do Placar (Estilo Placar de TV)
+        .p-2
+          //- LINHA DO JOGADOR 1
+          .d-flex.align-items-center.justify-content-between.py-1
+            .d-flex.align-items-center.gap-2.flex-grow-1.min-width-0
               if match.player1 && match.player1 !== ""
-                span.small.fw-bold(class=(match.played && ((match.set1.p1 > match.set1.p2 && match.set2.p1 > match.set2.p2) || (match.set3 && match.set3.p1 > match.set3.p2)) ? 'text-success' : ''))= match.player1
+                span.small.text-truncate(class=(match.played && ((match.set1.p1 > match.set1.p2 && match.set2.p1 > match.set2.p2) || (match.set3 && match.set3.p1 > match.set3.p2)) ? 'fw-bold text-success' : 'fw-semibold'))= match.player1
               else if match.playoffStage === 'semifinal'
-                i.bi.bi-hourglass-split.text-muted
+                i.bi.bi-hourglass-split.text-muted.small
                 span.small.text-muted.fst-italic= match.playoffKey === 'S1' ? 'Vencedor de Q1' : 'Vencedor de Q3'
               else if match.playoffStage === 'final'
-                i.bi.bi-hourglass-split.text-muted
+                i.bi.bi-hourglass-split.text-muted.small
                 span.small.text-muted.fst-italic Vencedor de S1
               else
-                i.bi.bi-person.text-muted
+                i.bi.bi-person.text-muted.small
                 if match.player1Source && match.player1Source.position === 101
                   span.small.text-muted.fst-italic 🥇 Melhor 3º Geral
                 else if match.player1Source && match.player1Source.position === 102
                   span.small.text-muted.fst-italic 🥈 2º Melhor 3º Geral
                 else if match.player1Source
-                  span.small.text-muted.fst-italic= `${match.player1Source.position}º Grupo ${match.player1Source.groupNumber}`
-            
-            if match.played
-              span.badge.bg-dark.font-monospace= `${match.set1.p1}-${match.set1.p2}`
+                  span.small.text-muted.fst-italic= `${match.player1Source.position}º G${match.player1Source.groupNumber}`
 
+            //- BLOCO DE PONTOS JOGADOR 1
+            if match.played
+              .d-flex.gap-1.align-items-center.ms-2
+                .text-center.fw-bold.rounded(style="width: 24px; height: 24px; background: #f1f1f1; font-size: 0.75rem; line-height: 24px;")= match.set1.p1
+                .text-center.fw-bold.rounded(style="width: 24px; height: 24px; background: #f1f1f1; font-size: 0.75rem; line-height: 24px;")= match.set2.p1
+                if match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
+                  .text-center.fw-bold.rounded.text-white(style="width: 24px; height: 24px; background: #d35400; font-size: 0.7rem; line-height: 24px;")= match.set3.p1
+
+          //- DIVISOR INTERNO SUTIL
           hr.my-1.opacity-25
 
-          //- Linha do Jogador 2
-          .d-flex.justify-content-between.align-items-center
-            .d-flex.align-items-center.gap-2
+          //- LINHA DO JOGADOR 2
+          .d-flex.align-items-center.justify-content-between.py-1
+            .d-flex.align-items-center.gap-2.flex-grow-1.min-width-0
               if match.player2 && match.player2 !== ""
-                span.small.fw-bold(class=(match.played && ((match.set1.p2 > match.set1.p1 && match.set2.p2 > match.set2.p1) || (match.set3 && match.set3.p2 > match.set3.p1)) ? 'text-success' : ''))= match.player2
+                span.small.text-truncate(class=(match.played && ((match.set1.p2 > match.set1.p1 && match.set2.p2 > match.set2.p1) || (match.set3 && match.set3.p2 > match.set3.p1)) ? 'fw-bold text-success' : 'fw-semibold'))= match.player2
               else if match.playoffStage === 'semifinal'
-                i.bi.bi-hourglass-split.text-muted
+                i.bi.bi-hourglass-split.text-muted.small
                 span.small.text-muted.fst-italic= match.playoffKey === 'S1' ? 'Vencedor de Q2' : 'Vencedor de Q4'
               else if match.playoffStage === 'final'
-                i.bi.bi-hourglass-split.text-muted
+                i.bi.bi-hourglass-split.text-muted.small
                 span.small.text-muted.fst-italic Vencedor de S2
               else
-                i.bi.bi-person.text-muted
+                i.bi.bi-person.text-muted.small
                 if match.player2Source && match.player2Source.position === 101
                   span.small.text-muted.fst-italic 🥇 Melhor 3º Geral
                 else if match.player2Source && match.player2Source.position === 102
                   span.small.text-muted.fst-italic 🥈 2º Melhor 3º Geral
                 else if match.player2Source
-                  span.small.text-muted.fst-italic= `${match.player2Source.position}º Grupo ${match.player2Source.groupNumber}`
-            
+                  span.small.text-muted.fst-italic= `${match.player2Source.position}º G${match.player2Source.groupNumber}`
+
+            //- BLOCO DE PONTOS JOGADOR 2
             if match.played
-              span.badge.bg-dark.font-monospace= `${match.set2.p1}-${match.set2.p2}`
+              .d-flex.gap-1.align-items-center.ms-2
+                .text-center.fw-bold.rounded(style="width: 24px; height: 24px; background: #f1f1f1; font-size: 0.75rem; line-height: 24px;")= match.set1.p2
+                .text-center.fw-bold.rounded(style="width: 24px; height: 24px; background: #f1f1f1; font-size: 0.75rem; line-height: 24px;")= match.set2.p2
+                if match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
+                  .text-center.fw-bold.rounded.text-white(style="width: 24px; height: 24px; background: #d35400; font-size: 0.7rem; line-height: 24px;")= match.set3.p2
 
-          //- Exibição de Super Tie-break caso tenha ocorrido
-          if match.played && match.set3 && (match.set3.p1 > 0 || match.set3.p2 > 0)
-            .text-center.mt-1.bg-danger.bg-opacity-10.rounded.py-1
-              span.text-danger.fw-bold(style="font-size: 0.7rem;") TIE-BREAKÃO: #{match.set3.p1} - #{match.set3.p2}
-
-        //- Área de Edição In-line (Libera o botão de Score se os dois nomes já existirem)
+        //- Botão de Lançamento de Placar
         - var userEmail = user ? user.email : null
         - var canEditPlayoff = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email)
         if canEditPlayoff && match.player1 && match.player2 && match.player1 !== "" && match.player2 !== ""
-          .mt-3.pt-2.border-top.text-end
-            a.btn.btn-sm.btn-outline-success.w-100(href=`/matches/score/${match._id}` style="font-size: 0.75rem;")
+          .px-2.pb-2.text-end
+            a.btn.btn-xs.btn-outline-success.w-100.d-flex.align-items-center.justify-content-center.fw-bold(
+              href=`/matches/score/${match._id}` 
+              style="font-size: 0.7rem; height: 28px; border-color: #1b4d3e; color: #1b4d3e;"
+            )
               i.bi.bi-pencil-square.me-1
-              | Lançar Placar do Confronto
+              | LANÇAR RESULTADO
 
   //- =========================================================================
   //- 2. ESTILOS LOCAIS
