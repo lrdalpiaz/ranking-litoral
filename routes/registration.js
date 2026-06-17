@@ -4,7 +4,7 @@ const RegistrationRequest = require('../models/RegistrationRequest');
 var router = express.Router();
 
 // 1. ROTA GET: Exibe o formulário
-router.get('/atualizar-cadastro', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         // Busca apenas usuários comuns ativos para que a pessoa se encontre na lista
         const existingUsers = await User.find({ role: 'player' }).sort({ name: 1 });
