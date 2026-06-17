@@ -44,7 +44,7 @@ router.post('/create', async (req, res) => {
     try {
         const { name, startDate } = req.body;
         const tournament = await Tournament.create({ name, startDate });
-        const classes = ['A', 'B', 'C', 'D', 'E'];
+        const classes = ['A', 'B', 'C', 'D', 'E', 'F'];
 
         for (let cls of classes) {
             const count = parseInt(req.body[`groupsCount_${cls}`]) || 0;

@@ -33,7 +33,7 @@ block content
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Classe Classificação
             ul.nav.nav-pills.w-100#classTabs(role="tablist" style="height: 38px; display: flex; gap: 5px;")
               - var activeClassSet = false
-              each cls in ['A', 'B', 'C', 'D', 'E']
+              each cls in ['A', 'B', 'C', 'D', 'E', 'F']
                 - var hasData = tournamentData && tournamentData[cls] && Object.keys(tournamentData[cls]).length > 0
                 - var isFirst = !activeClassSet && hasData
                 if isFirst
@@ -54,7 +54,7 @@ block content
     //- CONTEÚDO DAS TABELAS
     - var activePaneSet = false
     .tab-content.mt-4(data-aos="fade-up" data-aos-delay="200")
-      each cls in ['A', 'B', 'C', 'D', 'E']
+      each cls in ['A', 'B', 'C', 'D', 'E', 'F']
         - var hasData = tournamentData && tournamentData[cls] && Object.keys(tournamentData[cls]).length > 0
         - var isFirstPane = !activePaneSet && hasData
         if isFirstPane

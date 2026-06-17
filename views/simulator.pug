@@ -12,12 +12,12 @@ block content
           i.bi.bi-arrow-counterclockwise.me-1
           | LIMPAR APENAS SIMULADOS
 
-    //- BARRA DE FILTROS (Torneio + Classe + Grupo)
-    .card.mb-4.border-0.shadow-sm(data-aos="fade-down" data-aos-delay="100")
-      .card-body.bg-white
-        .row.g-3.align-items-end
+    .card.border-0.shadow-sm.mb-4(data-aos="fade-down")
+      .card-body.bg-white.p-4
+        .row.align-items-end.g-2
+          //- Tournament
           .col-md-4
-            label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Torneio / Temporada
+            label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Temporada
             select.form-select.form-select-sm.border-success(style="height: 38px;" onchange=`location.href='/simulator?tournamentId=' + this.value + '&class=${selectedClass}&group=${selectedGroup}'`)
               if tournaments && tournaments.length > 0
                 each t in tournaments
@@ -27,13 +27,13 @@ block content
           .col-md-4
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Classe
             .btn-group.w-100(style="height: 38px;")
-              each c in ['A', 'B', 'C', 'D', 'E']
-                a.btn.btn-sm.d-flex.align-items-center.justify-content-center(href=`/simulator?tournamentId=${selectedTournament}&class=${c}&group=${selectedGroup}` class=(selectedClass == c ? 'btn-success fw-bold' : 'btn-outline-success'))= `Classe ${c}`
+              each c in ['A', 'B', 'C', 'D', 'E', 'F']
+                a.btn.btn-sm.d-flex.align-items-center.justify-content-center(href=`/simulator?tournamentId=${selectedTournament}&class=${c}&group=${selectedGroup}` class=(selectedClass == c ? 'btn-success fw-bold' : 'btn-outline-success'))= `${c}`
           .col-md-4
             label.small.text-uppercase.fw-bold.text-muted.mb-1 👥 Grupo
             .btn-group.w-100(style="height: 38px;")
               if groups && groups.length > 0
-                each g in groups
+                each g in [1, 2, 3, 4]
                   a.btn.btn-sm.d-flex.align-items-center.justify-content-center(
                     href=`/simulator?tournamentId=${selectedTournament}&class=${selectedClass}&group=${g}` 
                     class=(selectedGroup == g ? 'btn-dark fw-bold' : 'btn-outline-dark')

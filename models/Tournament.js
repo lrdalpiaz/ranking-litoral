@@ -4,7 +4,7 @@ const tournamentSchema = new mongoose.Schema({
   name: String,
   startDate: Date,
   classes: [{
-    className: { type: String, enum: ['A', 'B', 'C', 'D', 'E'] },
+    className: { type: String, enum: ['A', 'B', 'C', 'D', 'E', 'F'] },
     groups: [{
       groupNumber: Number,
       players: [String] // Lista de nomes dos jogadores no grupo

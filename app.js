@@ -13,6 +13,7 @@ var simulatorRouter = require('./routes/simulator.js');
 var matchesRouter = require('./routes/matches');
 var playoffsRouter = require('./routes/playoffs');
 var tournamentsRouter = require('./routes/tournaments');
+var registrationRouter = require('./routes/registration');
 var app = express();
 
 const mongoURI = process.env.MONGODB_URI || "mongodb+srv://lrdalpiaz:jp9N3bnaeTg4cr6c@cluster0.lgxrw0w.mongodb.net/sample_mflix?appName=Cluster0";
@@ -58,6 +59,7 @@ app.use('/users', usersRouter);
 app.use('/matches', matchesRouter);
 app.use('/playoffs', playoffsRouter);
 app.use('/tournaments', tournamentsRouter);
+app.use('/registration', registrationRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

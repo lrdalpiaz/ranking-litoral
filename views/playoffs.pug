@@ -146,7 +146,7 @@ block content
           .col-md-8
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Classe Playoffs
             .btn-group.w-100(style="height: 38px;")
-              each c in ['A', 'B', 'C', 'D', 'E']
+              each c in ['A', 'B', 'C', 'D', 'E', 'F']
                 a.btn.btn-sm.d-flex.align-items-center.justify-content-center(
                   href=`/playoffs/matches?tournamentId=${selectedTournament}&class=${c}` 
                   class=(selectedClass == c ? 'btn-success fw-bold' : 'btn-outline-success')
