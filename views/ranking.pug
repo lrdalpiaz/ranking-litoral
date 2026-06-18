@@ -21,7 +21,7 @@ block content
           //- Filtro de Torneio / Temporada (33% da largura)
           .col-md-4
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Torneio / Temporada
-            select.form-select.form-select-sm.border-success(style="height: 38px;" onchange=`location.href='/ranking?tournamentId=' + this.value`)
+            select.form-select.form-select-sm.border-success(style="height: 38px;" onchange=`location.href='/matches/ranking?tournamentId=' + this.value`)
               if tournaments && tournaments.length > 0
                 each t in tournaments
                   option(value=t._id.toString() selected=(t._id.toString() === selectedTournament))= t.name

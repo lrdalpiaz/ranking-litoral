@@ -37,7 +37,7 @@ block content
                   a.btn.btn-sm.d-flex.align-items-center.justify-content-center(
                     href=`/simulator?tournamentId=${selectedTournament}&class=${selectedClass}&group=${g}` 
                     class=(selectedGroup == g ? 'btn-dark fw-bold' : 'btn-outline-dark')
-                  )= `Grupo ${g}`
+                  )= `${g}`
               else
                 button.btn.btn-sm.btn-outline-secondary(disabled) Sem grupos
 
