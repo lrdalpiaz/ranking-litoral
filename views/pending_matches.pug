@@ -337,13 +337,13 @@ block content
             const p1Phone = match.player1Id && match.player1Id.phone ? match.player1Id.phone.replace(/\D/g, '') : null;
             const p1Name = match.player1Id ? (match.player1Id.nickname || match.player1Id.name) : match.player1;
             const linkP1 = p1Phone
-                ? `<a href="https://wa.me/${p1Phone}?text=Olá%20${encodeURIComponent(p1Name)},%20sou%20seu%20adversário%20no%20Litoral%20Tour.%20Vamos%20agendar%20nosso%20jogo?" target="_blank" title="Chamar no WhatsApp" style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;" onclick="event.stopPropagation();">📞</a>`
+                ? `<a href="https://wa.me/55${p1Phone}?text=Olá%20${encodeURIComponent(p1Name)},%20sou%20seu%20adversário%20no%20Litoral%20Tour.%20Vamos%20agendar%20nosso%20jogo?" target="_blank" title="Chamar no WhatsApp" style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;" onclick="event.stopPropagation();">📞</a>`
                 : '';
 
             const p2Phone = match.player2Id && match.player2Id.phone ? match.player2Id.phone.replace(/\D/g, '') : null;
             const p2Name = match.player2Id ? (match.player2Id.nickname || match.player2Id.name) : match.player2;
             const linkP2 = p2Phone
-                ? `<a href="https://wa.me/${p2Phone}?text=Olá%20${encodeURIComponent(p2Name)},%20sou%20seu%20adversário%20no%20Litoral%20Tour.%20Vamos%20agendar%20nosso%20jogo?" target="_blank" title="Chamar no WhatsApp" style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;" onclick="event.stopPropagation();">📞</a>`
+                ? `<a href="https://wa.me/55${p2Phone}?text=Olá%20${encodeURIComponent(p2Name)},%20sou%20seu%20adversário%20no%20Litoral%20Tour.%20Vamos%20agendar%20nosso%20jogo?" target="_blank" title="Chamar no WhatsApp" style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;" onclick="event.stopPropagation();">📞</a>`
                 : '';
 
             // SEU HTML ORIGINAL (Apenas adicionado d-flex e os links nas colunas dos jogadores)
