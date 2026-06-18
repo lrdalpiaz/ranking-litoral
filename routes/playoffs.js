@@ -89,7 +89,7 @@ async function getPlayerFromStanding(allMatches, className, groupNumber, positio
         const athlete = allThirdPlacePlayers[targetIndex];
 
         if (athlete) {
-            const user = await User.findOne({ nome: athlete.name }).lean();
+            const user = await User.findOne({ name: athlete.name }).lean();
             return { name: athlete.name, email: user ? user.email : 'player@null.com' };
         }
         return null;
@@ -102,7 +102,7 @@ async function getPlayerFromStanding(allMatches, className, groupNumber, positio
     
     const athlete = standing[position - 1];
     if (athlete) {
-        const user = await User.findOne({ nome: athlete.name }).lean();
+        const user = await User.findOne({ name: athlete.name }).lean();
         return { name: athlete.name, email: user ? user.email : 'player@null.com' };
     }
     return null;

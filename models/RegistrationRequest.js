@@ -10,7 +10,6 @@ const registrationRequestSchema = new mongoose.Schema({
     nickname: { type: String, required: false, default: "" },
     email: { type: String, required: false, lowercase: true, trim: true, default: "" },
     phone: { type: String, required: true },
-    intendedClass: { type: String, required: true, enum: ['A', 'B', 'C', 'D', 'E', 'F'] },
     
     status: { 
         type: String, 

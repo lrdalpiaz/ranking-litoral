@@ -7,37 +7,26 @@ block content
         .card.border-0.shadow-sm.bg-white(data-aos="zoom-in")
           //- Cabeçalho institucional estilo Litoral Tour
           .card-header.bg-success.text-white.text-center.py-4(style="background-color: #1b4d3e !important;")
-            h3.fw-bold.mb-1.text-uppercase 🎾 Inscrição & Atualização
-            p.mb-0.small Sincronize seus dados oficiais ou crie seu perfil de atleta no circuito
+            h3.fw-bold.mb-1.text-uppercase 🎾 Atualização de Dados
+            p.mb-0.small Localize seu perfil e sincronize seus dados oficiais no circuito
 
           .card-body.p-4
             form#registrationForm(action="/registration/submit" method="POST")
               
-              //- Seletor de Tipo de Cadastro
+              //- Campo de Seleção de Usuário
               .mb-4
-                label.small.text-uppercase.fw-bold.text-muted.mb-2 Quem é você no circuito?
-                .d-flex.gap-3
-                  .form-check.flex-grow-1.border.rounded.p-3(style="cursor: pointer;")
-                    input#typeExisting.form-check-input.ms-0.me-2(type="radio" name="isNewUser" value="false" checked onclick="toggleUserDropdown(false)")
-                    label.form-check-label.fw-semibold(for="typeExisting" style="cursor: pointer;") Já jogo o Ranking 
-                  .form-check.flex-grow-1.border.rounded.p-3(style="cursor: pointer;")
-                    input#typeNew.form-check-input.ms-0.me-2(type="radio" name="isNewUser" value="true" onclick="toggleUserDropdown(true)")
-                    label.form-check-label.fw-semibold(for="typeNew" style="cursor: pointer;") Sou um atleta Novo
-
-              //- Campo de Match (Exibido apenas para usuários existentes)
-              #matchUserSection.mb-4
-                label.small.text-uppercase.fw-bold.text-muted.mb-1 🔍 Selecione seu nome atual na lista (com email antigo/fake)
-                select#existingUserId.form-select.border-success(name="existingUserId" style="height: 45px;" onchange="validateForm()")
+                label.small.text-uppercase.fw-bold.text-muted.mb-1 🔍 1. Selecione seu nome atual na lista (com email antigo/fake)
+                select#existingUserId.form-select.border-success(name="existingUserId" required onchange="validateForm()" style="height: 45px;")
                   option(value="" disabled selected) Procure pelo seu nome na lista...
                   if existingUsers && existingUsers.length > 0
                     each u in existingUsers
                       option(value=u._id.toString())= `${u.name} (${u.email})`
-                span.text-muted.d-block.mt-1(style="font-size: 0.7rem; line-height: 1.2;") Não se preocupe se o e-mail ao lado parecer estranho, vamos atualizá-lo com o formulário abaixo.
+                span.text-muted.d-block.mt-1(style="font-size: 0.7rem; line-height: 1.2;") Não se preocupe se o e-mail cadastrado ao lado parecer incorreto ou antigo. Vamos atualizá-lo com as informações abaixo.
 
               hr.my-4.opacity-25
 
               //- Dados Novos/Atualizados
-              h5.fw-bold.mb-3.text-success(style="color: #1b4d3e;") Seus Dados
+              h5.fw-bold.mb-3.text-success(style="color: #1b4d3e;") 2. Seus Dados
               
               .mb-3
                 label.small.text-uppercase.fw-bold.text-muted.mb-1 Nome Completo
@@ -53,16 +42,9 @@ block content
                 #emailFeedback.invalid-feedback(style="font-size: 0.75rem;") Por favor, insira um endereço de e-mail válido.
                 span.text-muted.d-block.mt-1(style="font-size: 0.65rem; line-height: 1.2;") Se você não tiver e-mail, pode deixar em branco. Criaremos um acesso temporário para você.
 
-              .mb-3
+              .mb-4
                 label.small.text-uppercase.fw-bold.text-muted.mb-1 Telefone / WhatsApp
                 input#phoneInput.form-control(type="tel" name="phone" placeholder="(51) 99999-9999" required maxlength="15" oninput="maskPhone(this)" style="height: 40px;")
-
-              .mb-4
-                label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Categoria / Classe Pretendida
-                select#intendedClass.form-select.border-success(name="intendedClass" required onchange="validateForm()" style="height: 40px;")
-                  option(value="" disabled selected) Selecione a sua categoria...
-                  each c in ['A', 'B', 'C', 'D', 'E', 'F']
-                    option(value=c)= `Classe ${c}`
 
               //- Botão inicia travado via CSS e HTML
               button#submitBtn.btn.btn-success.w-100.fw-bold.text-uppercase.py-2.shadow-sm(type="submit" disabled style="background-color: #1b4d3e; border-color: #1b4d3e; transition: all 0.2s ease;")
@@ -73,20 +55,6 @@ block content
   //- MOTOR DE COMPORTAMENTO E VALIDAÇÕES EM TEMPO REAL (JAVASCRIPT)
   //- =========================================================================
   script.
-    function toggleUserDropdown(isNew) {
-      const section = document.getElementById('matchUserSection');
-      const selectElement = document.getElementById('existingUserId');
-      if (isNew) {
-        section.style.display = 'none';
-        selectElement.removeAttribute('required');
-        selectElement.value = ""; 
-      } else {
-        section.style.display = 'block';
-        selectElement.setAttribute('required', 'required');
-      }
-      validateForm();
-    }
-    
     function maskPhone(input) {
       let value = input.value.replace(/\D/g, "");
       if (value.length > 11) value = value.slice(0, 11);
@@ -104,31 +72,28 @@ block content
     }
 
     function validateForm() {
-      const form = document.getElementById('registrationForm');
       const submitBtn = document.getElementById('submitBtn');
       
-      const isExisting = document.getElementById('typeExisting').checked;
       const selectElement = document.getElementById('existingUserId');
       const fullName = document.getElementById('fullName').value.trim();
       const phone = document.getElementById('phoneInput').value.trim();
       const email = document.getElementById('emailInput').value.trim();
-      const intendedClass = document.getElementById('intendedClass').value;
       const emailInput = document.getElementById('emailInput');
       const emailFeedback = document.getElementById('emailFeedback');
 
       let isValid = true;
 
-      // 1. Dropdown obrigatório se for atleta antigo
-      if (isExisting && !selectElement.value) {
+      // 1. Dropdown de match obrigatório
+      if (!selectElement.value) {
         isValid = false;
       }
 
-      // 2. Validação de campos de texto e categoria
-      if (!fullName || !intendedClass) {
+      // 2. Validação do nome completo
+      if (!fullName) {
         isValid = false;
       }
 
-      // 3. Tamanho mínimo aceitável para número fixo ou celular com máscara (mínimo 14 caracteres)
+      // 3. Tamanho mínimo aceitável para o telefone brasileiro com máscara
       if (phone.length < 14) {
         isValid = false;
       }

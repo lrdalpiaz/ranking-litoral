@@ -22,8 +22,7 @@ router.get('/', async (req, res) => {
 // 2. ROTA POST: Processa o envio do formulário
 router.post('/submit', async (req, res) => {
     try {
-        // Capturando intendedClass do formulário
-        let { isNewUser, existingUserId, fullName, nickname, email, phone, intendedClass } = req.body;
+        let { isNewUser, existingUserId, fullName, nickname, email, phone } = req.body;
 
         fullName = fullName ? fullName.trim() : "";
         phone = phone ? phone.trim() : "";
@@ -56,8 +55,7 @@ router.post('/submit', async (req, res) => {
             fullName,
             nickname,
             email,
-            phone,
-            intendedClass // Gravando oficialmente no banco de dados
+            phone
         });
 
         res.send(`
