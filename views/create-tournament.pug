@@ -125,7 +125,7 @@ block content
           groupDiv.className = 'col-md-6 mb-4';
           
           const selectId = `select-${cls}-${i}`;
-          let options = allPlayers.map(p => `<option value="${p.email}">${p.name}</option>`).join('');
+          let options = allPlayers.map(p => `<option value="${p.email}">${p.name} (${p.email})</option>`).join('');
           
           groupDiv.innerHTML = `
             <label class="fw-bold small mb-1">Grupo ${i}</label>
