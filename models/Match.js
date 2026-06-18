@@ -8,6 +8,10 @@ const matchSchema = new mongoose.Schema({
   player1Email: { type: String, required: false, default: null },
   player2: { type: String, required: false, default: null },
   player2Email: { type: String, required: false, default: null },
+
+  player1Id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  player2Id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
   set1: { p1: Number, p2: Number },
   set2: { p1: Number, p2: Number },
   set3: { p1: Number, p2: Number }, // Tiebreak

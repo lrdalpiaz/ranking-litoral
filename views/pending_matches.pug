@@ -72,11 +72,23 @@ block content
                 //- Confronto (Ajustado para col-md-8 para dar mais espaço ao centro)
                 .col-md-8
                   .row.align-items-center.text-center(id=`match-row-${match._id}`)
-                    //- Jogador 1 (col-12 no mobile, col-md-3 no desktop)
-                    .col-12.col-md-3.mb-2.mb-md-0
+
+                    //- JOGADOR 1
+                    .col-12.col-md-3.mb-2.mb-md-0.d-flex.align-items-center.justify-content-center.gap-1
                       span.fw-bold.text-uppercase.small= match.player1
-                    
-                    //- Container do Placar (Damos mais espaço aqui: col-6)
+
+                      if match.player1Id && match.player1Id.phone
+                        - var cleanPhone1 = match.player1Id.phone.replace(/\D/g, '')
+                        - var nameP1 = match.player1Id.nickname || match.player1Id.name
+                        a(
+                          href=`https://wa.me/55${cleanPhone1}?text=Olá%20${encodeURIComponent(nameP1)},%20sou%20seu%20adversário%20no%20Ranking%20do%20tênis.%20Vamos%20agendar%20nosso%20jogo?`
+                          target="_blank"
+                          title="Chamar no WhatsApp"
+                          style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;"
+                          onclick="event.stopPropagation();"
+                        ) 📞
+
+                    //- CONTAINER DO PLACAR
                     .col-12.col-md-6.my-2.my-md-0(id=`score-container-${match._id}`)
                       if match.played
                         .d-flex.justify-content-center.gap-1
@@ -86,9 +98,21 @@ block content
                             span.badge.bg-danger= `TB:${match.set3.p1}-${match.set3.p2}`
                       else
                         span.text-muted vs
-                    
-                    .col-12.col-md-3.mt-2.mt-md-0
+
+                    //- JOGADOR 2
+                    .col-12.col-md-3.mt-2.mt-md-0.d-flex.align-items-center.justify-content-center.gap-1
                       span.fw-bold.text-uppercase.small= match.player2
+
+                      if match.player2Id && match.player2Id.phone
+                        - var cleanPhone2 = match.player2Id.phone.replace(/\D/g, '')
+                        - var nameP2 = match.player2Id.nickname || match.player2Id.name
+                        a(
+                          href=`https://wa.me/55${cleanPhone2}?text=Olá%20${encodeURIComponent(nameP2)},%20sou%20seu%20adversário%20no%20Ranking%20do%20tênis.%20Vamos%20agendar%20nosso%20jogo?`
+                          target="_blank"
+                          title="Chamar no WhatsApp"
+                          style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;"
+                          onclick="event.stopPropagation();"
+                        ) 📞
                 
                 //- Ação
                 .col-md-2.text-end(id=`action-container-${match._id}`)
@@ -310,6 +334,19 @@ block content
                    : ''}
                </div>`
             : `<span class="text-muted">vs</span>`;
+            const p1Phone = match.player1Id && match.player1Id.phone ? match.player1Id.phone.replace(/\D/g, '') : null;
+            const p1Name = match.player1Id ? (match.player1Id.nickname || match.player1Id.name) : match.player1;
+            const linkP1 = p1Phone
+                ? `<a href="https://wa.me/${p1Phone}?text=Olá%20${encodeURIComponent(p1Name)},%20sou%20seu%20adversário%20no%20Litoral%20Tour.%20Vamos%20agendar%20nosso%20jogo?" target="_blank" title="Chamar no WhatsApp" style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;" onclick="event.stopPropagation();">📞</a>`
+                : '';
+
+            const p2Phone = match.player2Id && match.player2Id.phone ? match.player2Id.phone.replace(/\D/g, '') : null;
+            const p2Name = match.player2Id ? (match.player2Id.nickname || match.player2Id.name) : match.player2;
+            const linkP2 = p2Phone
+                ? `<a href="https://wa.me/${p2Phone}?text=Olá%20${encodeURIComponent(p2Name)},%20sou%20seu%20adversário%20no%20Litoral%20Tour.%20Vamos%20agendar%20nosso%20jogo?" target="_blank" title="Chamar no WhatsApp" style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;" onclick="event.stopPropagation();">📞</a>`
+                : '';
+
+            // SEU HTML ORIGINAL (Apenas adicionado d-flex e os links nas colunas dos jogadores)
             const matchHTML = `
                 <div class="card mb-2 border-0 shadow-sm" data-aos="fade-up" data-aos-delay="${delay}">
                   <div class="card-body py-3 ${match.played ? 'bg-light' : ''}" id="match-row-${match._id}">
@@ -325,16 +362,20 @@ block content
                       <div class="col-md-8">
                         <div class="row align-items-center text-center" id="match-row-${match._id}">
 
-                          <div class="col-12 col-md-3 mb-2 mb-md-0">
+                          <!-- JOGADOR 1: Adicionado alinhamento d-flex e variável do link -->
+                          <div class="col-12 col-md-3 mb-2 mb-md-0 d-flex align-items-center justify-content-center gap-1">
                             <span class="fw-bold text-uppercase small">${match.player1}</span>
+                            ${linkP1}
                           </div>
 
                           <div class="col-12 col-md-6 my-2 my-md-0" id="score-container-${match._id}">
                             ${scoreHtml}
                           </div>
 
-                          <div class="col-12 col-md-3 mt-2 mt-md-0">
+                          <!-- JOGADOR 2: Adicionado alinhamento d-flex e variável do link -->
+                          <div class="col-12 col-md-3 mt-2 mt-md-0 d-flex align-items-center justify-content-center gap-1">
                             <span class="fw-bold text-uppercase small">${match.player2}</span>
+                            ${linkP2}
                           </div>
                         </div>
                       </div>
@@ -352,48 +393,6 @@ block content
                   </div>
                 </div>
             `;
-            // Construção do Card da Partida
-            const matchHTML2 = `
-                <div class="card mb-2 border-0 shadow-sm ${match.played ? 'bg-light' : ''}" data-aos="fade-up" id="match-card-${match._id}">
-                    <div class="card-body py-3" id="match-row-${match._id}">
-                        <div class="row align-items-center">
-                            <!-- Status -->
-                            <div class="col-md-2 text-center border-end">
-                                <span class="badge rounded-pill ${match.played ? 'bg-secondary' : 'bg-warning text-dark'}">
-                                    ${match.played ? 'FINALIZADO' : 'PENDENTE'}
-                                </span>
-                            </div>
-    
-                            <!-- Confronto -->
-                            <div class="col-md-8">
-                                <div class="row align-items-center text-center">
-                                    <div class="col-4 text-end">
-                                        <span class="fw-bold me-2">${match.player1}</span>
-                                    </div>
-    
-                                    <div class="col-4" id="score-container-${match._id}">
-                                        ${match.played ? renderScoreBadges(match) : '<span class="text-muted small">VS</span>'}
-                                    </div>
-    
-                                    <div class="col-4 text-start">
-                                        <span class="fw-bold ms-2">${match.player2}</span>
-                                    </div>
-                                </div>
-                            </div>
-    
-                            <!-- Ação -->
-                            <div class="col-md-2 text-end" id="action-container-${match._id}">
-                                ${canEdit ? `
-                                    <button class="btn btn-sm w-100 ${match.played ? 'btn-outline-secondary' : 'btn-success'}" 
-                                            onclick='enableInlineEdit("${match._id}", ${JSON.stringify(match)})'>
-                                        <i class="bi bi-pencil-square me-1"></i>
-                                        ${match.played ? 'Edit' : 'Score'}
-                                    </button>
-                                ` : '<span class="badge bg-light text-muted">Somente visualização</span>'}
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
             
             listContainer.insertAdjacentHTML('beforeend', matchHTML);
         });

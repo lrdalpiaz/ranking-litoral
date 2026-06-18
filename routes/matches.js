@@ -23,8 +23,12 @@ router.get('/pending', async (req, res) => {
         if (selectedClass) query.className = selectedClass;
         if (selectedGroup) query.groupNumber = parseInt(selectedGroup);
 
-        const matches = await Match.find(query).sort({ round: 1, className: 1, groupNumber: 1 });
-
+        const matches = await Match.find(query)
+            .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+            .populate('player2Id')
+            .sort({ round: 1, className: 1, groupNumber: 1 })
+            .lean()
+            .exec();
         res.render('pending_matches', { 
             matches, 
             tournaments,
@@ -47,7 +51,13 @@ router.get('/filter', async (req, res) => {
         };
         console.log(query);
         
-        const matches = await Match.find(query).sort({ round: 1 });
+        // const matches = await Match.find(query).sort({ round: 1 });
+        const matches = await Match.find(query)
+            .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+            .populate('player2Id')
+            .sort({ round: 1, className: 1, groupNumber: 1 })
+            .lean()
+            .exec();
         // Retornamos os dados e o usuário logado para controle de permissão no front
         res.json({ 
             matches, 
