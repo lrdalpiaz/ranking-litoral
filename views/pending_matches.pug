@@ -324,7 +324,7 @@ block content
             if (match.round !== currentRound) {
                 currentRound = match.round;
                 const mainContainer = document.getElementById('main-container');
-                const adminPhone = user.phone ? user.phone.replace(/\D/g, '') : '';
+                const adminPhone = user && user.phone ? user.phone.replace(/\D/g, '') : '';
                 const activeTournamentId = document.getElementById('main-container').getAttribute('data-tournament');
 
                 // 2. Formata a data limite de forma amigável para passar como atributo
