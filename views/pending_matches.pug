@@ -1,7 +1,7 @@
 extends layout
 
 block content
-  .container.mt-4#main-container(data-class=selectedClass data-group=selectedGroup data-tournament=selectedTournament)
+  .container.mt-4#main-container(data-class=selectedClass data-group=selectedGroup data-tournament=selectedTournament data-admin-phone=(adminUser && adminUser.role === 'admin' && adminUser.phone ? adminUser.phone.replace(/\D/g, '') : ''))
     .d-flex.justify-content-between.align-items-center.mb-4(data-aos="fade-down")
       h2.fw-bold.text-uppercase 📅 Agenda de jogos
       if selectedClass || selectedGroup
@@ -59,7 +59,19 @@ block content
   
                 | Semana #{currentRound} 
                 small.text-muted.fs-6.ms-2 — Data limite: #{match.deadline.toLocaleDateString('pt-BR')}
-          
+
+                //- Botão integrado de exportação (Apenas para o Administrador logado)
+                if user && user.role === 'admin'
+                  - var cleanAdminPhone = adminUser.phone ? adminUser.phone.replace(/\D/g, '') : ''
+                  span.ms-3.btn-export-whatsapp(
+                    data-admin-phone=cleanAdminPhone
+                    data-round=currentRound
+                    data-deadline=match.deadline.toLocaleDateString('pt-BR')
+                    data-tournament=selectedTournament
+                    title="Exportar Boletim da Semana para o WhatsApp"
+                    style="cursor: pointer; font-size: 1rem; color: #25D366; display: inline-block; vertical-align: middle;"
+                    onclick="exportWeeklyBulletin(this)"
+                  ) 📲
           .card.mb-2.border-0.shadow-sm(data-aos="fade-up" data-aos-delay=(index % 5) * 50)
             .card-body.py-3(id=`match-row-${match._id}` class=match.played ? 'bg-light' : '')
               //- Dentro do card-body do loop de matches
@@ -311,11 +323,32 @@ block content
             // Cabeçalho da Semana
             if (match.round !== currentRound) {
                 currentRound = match.round;
+                const mainContainer = document.getElementById('main-container');
+                const adminPhone = user.phone ? user.phone.replace(/\D/g, '') : '';
+                const activeTournamentId = document.getElementById('main-container').getAttribute('data-tournament');
+
+                // 2. Formata a data limite de forma amigável para passar como atributo
+                const formattedDeadline = new Date(match.deadline).toLocaleDateString('pt-BR');
+
+                // 3. SEU SCRIPT ATUALIZADO: Injeta o botão com verificação se o usuário é administrador
+                const showExportButton = adminPhone !== '';
+
                 const roundHeader = `
                     <div class="mt-5 mb-3" data-aos="fade-right">
                         <h4 class="text-uppercase fw-900" style="color: var(--clay-orange); border-left: 4px solid var(--clay-orange); padding-left: 15px;">
                             Semana ${currentRound} 
-                            <small class="text-muted fs-6 ms-2">— Data limite: ${new Date(match.deadline).toLocaleDateString('pt-BR')}</small>
+                            <small class="text-muted fs-6 ms-2">— Data limite: ${formattedDeadline}</small>
+
+                            ${showExportButton ? `
+                                <span class="ms-3 btn-export-whatsapp"
+                                      data-admin-phone="${adminPhone}"
+                                      data-round="${currentRound}"
+                                      data-tournament="${activeTournamentId}"
+                                      data-deadline="${formattedDeadline}"
+                                      title="Exportar Boletim da Semana para o WhatsApp"
+                                      style="cursor: pointer; font-size: 1rem; color: #25D366; display: inline-block; vertical-align: middle;"
+                                      onclick="exportWeeklyBulletin(this)">📲</span>
+                            ` : ''}
                         </h4>
                     </div>`;
                 listContainer.insertAdjacentHTML('beforeend', roundHeader);
@@ -413,5 +446,55 @@ block content
                 <span class="badge bg-dark">${match.set2.p1}-${match.set2.p2}</span>
                 ${tbHtml}
             </div>`;
+    }
+
+    async function exportWeeklyBulletin(element) {
+        const adminPhone = element.getAttribute('data-admin-phone');
+        const round = element.getAttribute('data-round');
+        const tournamentId = element.getAttribute('data-tournament');
+        const deadline = element.getAttribute('data-deadline');
+
+        if (!adminPhone) {
+            alert("O seu cadastro de administrador não possui um número de telefone cadastrado.");
+            return;
+        }
+
+        try {
+            // Busca os dados consolidados em JSON direto da API do servidor
+            const response = await fetch(`/matches/admin/export-week/${round}?tournamentId=${tournamentId}`);
+
+            const result = await response.json();
+
+            if (!result.success) {
+                alert("Erro ao buscar jogos: " + result.error);
+                return;
+            }
+
+            const bulletin = result.bulletin;
+            let messageText = `Jogos até ${deadline}:\n`;
+
+            // Varre as categorias agrupadas (Classe A, Classe B, etc)
+            for (const [className, matches] of Object.entries(bulletin)) {
+                messageText += `\n*${className}*\n`;
+
+                matches.forEach(match => {
+                    messageText += `${match.p1} ${match.score} ${match.p2}\n`;
+                });
+            }
+
+            // Se a semana estiver totalmente vazia no banco
+            if (Object.keys(bulletin).length === 0) {
+                alert("Nenhum confronto localizado nesta semana para exportação.");
+                return;
+            }
+
+            // Abre o link do WhatsApp oficial em uma nova aba
+            const whatsappUrl = `https://wa.me/55${adminPhone}?text=${encodeURIComponent(messageText)}`;
+            window.open(whatsappUrl, '_blank');
+
+        } catch (err) {
+            console.error(err);
+            alert("Erro técnico de comunicação ao gerar o boletim.");
+        }
     }
 

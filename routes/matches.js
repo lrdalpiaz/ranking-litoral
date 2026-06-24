@@ -23,6 +23,12 @@ router.get('/pending', async (req, res) => {
         if (selectedClass) query.className = selectedClass;
         if (selectedGroup) query.groupNumber = parseInt(selectedGroup);
 
+        // Busca os dados do administrador logado na sessão
+        let adminUser = null;
+        if (req.session.userId) {
+            adminUser = await User.findById(req.session.userId).lean();
+        }
+        console.log("Admin: ", adminUser);
         const matches = await Match.find(query)
             .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
             .populate('player2Id')
@@ -34,10 +40,75 @@ router.get('/pending', async (req, res) => {
             tournaments,
             selectedTournament,
             selectedClass, 
-            selectedGroup 
+            selectedGroup,
+            adminUser
         });
     } catch (err) {
         res.status(500).send("Erro ao filtrar jogos.");
+    }
+});
+
+router.get('/admin/export-week/:round', async (req, res) => {
+        try {
+        if (!req.session.userId || req.session.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Não autorizado.' });
+        }
+
+        const roundNumber = parseInt(req.params.round);
+        const { tournamentId } = req.query; // 👈 CAPTURA O TORNEIO ATIVO DA BARRA DE FILTROS
+        console.log("tournamentId", req.query);
+        if (!tournamentId) {
+            return res.status(400).json({ success: false, error: 'Tournament ID é obrigatório.' });
+        }
+
+        // CORREÇÃO CRUCIAL: Filtra por Semana, Torneio E garante que é Fase de Grupos
+        const matches = await Match.find({
+            round: roundNumber,
+            tournamentId: tournamentId,
+            isPlayoff: false // 👈 Evita misturar jogos de mata-mata aqui
+        })
+        .sort({ className: 1, player1: 1 })
+        .lean();
+
+        // Agrupa os confrontos por Classe dentro de um objeto mapeado
+        const bulletinData = {};
+
+        matches.forEach(match => {
+            const className = `Classe ${match.className}`;
+            if (!bulletinData[className]) {
+                bulletinData[className] = [];
+            }
+
+            let scoreText = "X";
+
+            if (match.played) {
+                let setsP1 = 0;
+                let setsP2 = 0;
+
+                if ((match.set1.p1 || 0) > (match.set1.p2 || 0)) setsP1++;
+                else if ((match.set1.p2 || 0) > (match.set1.p1 || 0)) setsP2++;
+
+                if ((match.set2.p1 || 0) > (match.set2.p2 || 0)) setsP1++;
+                else if ((match.set2.p2 || 0) > (match.set2.p1 || 0)) setsP2++;
+
+                if (match.set3 && ((match.set3.p1 || 0) > 0 || (match.set3.p2 || 0) > 0)) {
+                    if ((match.set3.p1 || 0) > (match.set3.p2 || 0)) setsP1++;
+                    else if ((match.set3.p2 || 0) > (match.set3.p1 || 0)) setsP2++;
+                }
+
+                scoreText = `${setsP1} X ${setsP2}`;
+            }
+
+            bulletinData[className].push({
+                p1: match.player1,
+                p2: match.player2,
+                score: scoreText
+            });
+        });
+
+        res.json({ success: true, bulletin: bulletinData });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -59,9 +130,10 @@ router.get('/filter', async (req, res) => {
             .lean()
             .exec();
         // Retornamos os dados e o usuário logado para controle de permissão no front
+        console.log(req.session);
         res.json({ 
             matches, 
-            user: req.session.userEmail ? { email: req.session.userEmail, role: req.session.role } : null 
+            user: req.session.userEmail ? { email: req.session.userEmail, phone: req.session.phone, role: req.session.role } : null
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

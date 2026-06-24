@@ -25,6 +25,7 @@ router.post('/login', async (req, res) => {
           req.session.userEmail = user.email; // CHAVE ÚNICA PARA PERMISSÕES
           req.session.userName = user.name;
           req.session.role = user.role || 'player';
+          req.session.phone = user.phone;
           
           console.log("Logou:" + req.session);
           res.redirect('/matches/pending');
