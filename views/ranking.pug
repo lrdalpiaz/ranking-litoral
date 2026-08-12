@@ -22,7 +22,7 @@ block content
           .col-md-4
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Torneio / Temporada
             select.form-select.form-select-sm.border-success(style="height: 38px;" onchange=`location.href='/matches/ranking?tournamentId=' + this.value`)
-              if tournaments && tournaments.length > 0
+              if touranaments && tournaments.length > 0
                 each t in tournaments
                   option(value=t._id.toString() selected=(t._id.toString() === selectedTournament))= t.name
               else
@@ -33,7 +33,7 @@ block content
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Classe Classificação
             ul.nav.nav-pills.w-100#classTabs(role="tablist" style="height: 38px; display: flex; gap: 5px;")
               - var activeClassSet = false
-              each cls in ['A', 'B', 'C', 'D', 'E', 'F']
+              each cls in ['A', 'B', 'C', 'D', 'E', 'F', 'G']
                 - var hasData = tournamentData && tournamentData[cls] && Object.keys(tournamentData[cls]).length > 0
                 - var isFirst = !activeClassSet && hasData
                 if isFirst
@@ -54,7 +54,7 @@ block content
     //- CONTEÚDO DAS TABELAS
     - var activePaneSet = false
     .tab-content.mt-4(data-aos="fade-up" data-aos-delay="200")
-      each cls in ['A', 'B', 'C', 'D', 'E', 'F']
+      each cls in ['A', 'B', 'C', 'D', 'E', 'F', 'G']
         - var hasData = tournamentData && tournamentData[cls] && Object.keys(tournamentData[cls]).length > 0
         - var isFirstPane = !activePaneSet && hasData
         if isFirstPane
@@ -79,6 +79,7 @@ block content
                               span Atleta
                           th.text-center(style="width: 80px") Pts
                           th.text-center(style="width: 80px") V
+                          th.text-center(style="width: 80px") J
                           th.text-center(style="width: 90px") Sets (S)
                           th.text-center(style="width: 90px") Games (G)
                         tbody
@@ -102,6 +103,8 @@ block content
                              td.text-center.align-middle.fw-bold.table-primary(style="background-color: rgba(13, 110, 253, 0.08) !important; color: #0a58ca !important;")= athlete.points
                              
                              td.text-center.align-middle= athlete.wins
+
+                             td.text-center.align-middle= athlete.matches
                              
                              //- Saldo de Sets com formatação de cor (+ / -)
                              - var setDiff = athlete.sWon - athlete.sLost

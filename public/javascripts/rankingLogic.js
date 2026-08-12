@@ -1,7 +1,7 @@
 const calculateStanding = (players, matches) => {
     const stats = {};
     players.forEach(p => {
-        stats[p] = { name: p, points: 0, wins: 0, sWon: 0, sLost: 0, gFav: 0, gAg: 0 };
+        stats[p] = { name: p, points: 0, matches: 0, wins: 0, sWon: 0, sLost: 0, gFav: 0, gAg: 0 };
     });
 
     // Filtra apenas jogos que tenham algum resultado
@@ -23,8 +23,8 @@ const calculateStanding = (players, matches) => {
         const s3p1 = parseInt(m.set3 ? m.set3.p1 : m.s3p1) || 0;
         const s3p2 = parseInt(m.set3 ? m.set3.p2 : m.s3p2) || 0;
 
-        stats[p1].gFav += (s1p1 + s2p1); stats[p1].gAg += (s1p2 + s2p2);
-        stats[p2].gFav += (s1p2 + s2p2); stats[p2].gAg += (s1p1 + s2p1);
+        stats[p1].matches++; stats[p1].gFav += (s1p1 + s2p1); stats[p1].gAg += (s1p2 + s2p2);
+        stats[p2].matches++; stats[p2].gFav += (s1p2 + s2p2); stats[p2].gAg += (s1p1 + s2p1);
 
         const p1Set1 = s1p1 > s1p2;
         const p1Set2 = s2p1 > s2p2;

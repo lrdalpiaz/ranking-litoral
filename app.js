@@ -65,8 +65,11 @@ app.use('/registration', registrationRouter);
 app.use(function(req, res, next) {
   next(createError(404));
 });
+// const PORT = 3000;
 
-
+// app.listen(PORT, '0.0.0.0', () => {
+//     console.log(`Servidor rodando em todas as interfaces na porta ${PORT}`);
+// });
 
 // error handler
 app.use(function(err, req, res, next) {

@@ -277,7 +277,7 @@ router.get('/ranking', async (req, res) => {
         }
 
         // 5. Garante que as classes padrão existam no objeto para o Pug não dar erro de loop
-        ['A', 'B', 'C', 'D', 'E', 'F'].forEach(cls => {
+        ['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach(cls => {
             if (!tournamentData[cls]) tournamentData[cls] = {};
         });
 
