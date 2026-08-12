@@ -31,10 +31,10 @@ block content
           //- Filtro de Classes usando Nav-Pills (66% da largura)
           .col-md-8
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Classe Classificação
-            //- Contêiner invisível que ativa a rolagem elástica do iPhone
-            .w-100.overflow-x-auto.pb-1(style="-webkit-overflow-scrolling: touch; scrollbar-width: none; ms-overflow-style: none;")
-              //- Adicionado flex-nowrap e min-width para expandir em linha única sem quebras
-              ul.nav.nav-pills.flex-nowrap#classTabs(role="tablist" style="height: 38px; display: flex; gap: 5px; min-width: max-content;")
+            //- Contêiner ajustado: removeu o overflow e travou a largura total
+            .w-100
+              //- display: flex com gap: 0px transforma a lista em uma barra contínua sem quebras
+              ul.nav.nav-pills#classTabs(role="tablist" style="height: 38px; display: flex; gap: 0px; border-radius: 6px; overflow: hidden; background-color: #f8f9fa; border: 1px solid #dee2e6;")
                 - var activeClassSet = false
                 each cls in ['A', 'B', 'C', 'D', 'E', 'F', 'G']
                   - var hasData = tournamentData && tournamentData[cls] && Object.keys(tournamentData[cls]).length > 0
@@ -42,16 +42,16 @@ block content
                   if isFirst
                     - activeClassSet = true
 
-                  //- Removido o flex: 1 para manter o tamanho natural e adicionado white-space: nowrap
-                  li(style="white-space: nowrap;")
-                    button.nav-link.h-100.d-flex.align-items-center.justify-content-center(
+                  //- flex: 1 força a divisão matemática exata do espaço (todas as letras ganham larguras idênticas)
+                  li(style="flex: 1; display: flex;")
+                    button.nav-link.w-100.h-100.d-flex.align-items-center.justify-content-center(
                       class=isFirst ? 'active' : ''
                       id=`tab-${cls}`
                       data-bs-toggle="pill"
                       data-bs-target=`#class-${cls}`
                       type="button"
                       role="tab"
-                      style="font-size: 0.85rem; padding: 0 16px;"
+                      style="font-size: 0.85rem; padding: 0; border-radius: 0px;"
                       disabled=!hasData
                     )= `${cls}`
 
