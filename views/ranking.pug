@@ -31,25 +31,29 @@ block content
           //- Filtro de Classes usando Nav-Pills (66% da largura)
           .col-md-8
             label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Classe Classificação
-            ul.nav.nav-pills.w-100#classTabs(role="tablist" style="height: 38px; display: flex; gap: 5px;")
-              - var activeClassSet = false
-              each cls in ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-                - var hasData = tournamentData && tournamentData[cls] && Object.keys(tournamentData[cls]).length > 0
-                - var isFirst = !activeClassSet && hasData
-                if isFirst
-                  - activeClassSet = true
-                
-                li(style="flex: 1;")
-                  button.nav-link.w-100.h-100.d-flex.align-items-center.justify-content-center(
-                    class=isFirst ? 'active' : ''
-                    id=`tab-${cls}`
-                    data-bs-toggle="pill"
-                    data-bs-target=`#class-${cls}`
-                    type="button"
-                    role="tab"
-                    style="font-size: 0.85rem;"
-                    disabled=!hasData
-                  )= `${cls}`
+            //- Contêiner invisível que ativa a rolagem elástica do iPhone
+            .w-100.overflow-x-auto.pb-1(style="-webkit-overflow-scrolling: touch; scrollbar-width: none; ms-overflow-style: none;")
+              //- Adicionado flex-nowrap e min-width para expandir em linha única sem quebras
+              ul.nav.nav-pills.flex-nowrap#classTabs(role="tablist" style="height: 38px; display: flex; gap: 5px; min-width: max-content;")
+                - var activeClassSet = false
+                each cls in ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+                  - var hasData = tournamentData && tournamentData[cls] && Object.keys(tournamentData[cls]).length > 0
+                  - var isFirst = !activeClassSet && hasData
+                  if isFirst
+                    - activeClassSet = true
+
+                  //- Removido o flex: 1 para manter o tamanho natural e adicionado white-space: nowrap
+                  li(style="white-space: nowrap;")
+                    button.nav-link.h-100.d-flex.align-items-center.justify-content-center(
+                      class=isFirst ? 'active' : ''
+                      id=`tab-${cls}`
+                      data-bs-toggle="pill"
+                      data-bs-target=`#class-${cls}`
+                      type="button"
+                      role="tab"
+                      style="font-size: 0.85rem; padding: 0 16px;"
+                      disabled=!hasData
+                    )= `${cls}`
 
     //- CONTEÚDO DAS TABELAS
     - var activePaneSet = false
