@@ -14,9 +14,10 @@ var matchesRouter = require('./routes/matches');
 var playoffsRouter = require('./routes/playoffs');
 var tournamentsRouter = require('./routes/tournaments');
 var registrationRouter = require('./routes/registration');
+var profileRouter = require('./routes/profile');
 var app = express();
 
-const mongoURI = process.env.MONGODB_URI || "mongodb+srv://lrdalpiaz:jp9N3bnaeTg4cr6c@cluster0.lgxrw0w.mongodb.net/sample_mflix?appName=Cluster0";
+const mongoURI = process.env.MONGODB_URI || "mongodb+srv://lrdalpiaz:jp9N3bnaeTg4cr6c@cluster0.lgxrw0w.mongodb.net/ranking_test?appName=Cluster0";
 mongoose.connect(mongoURI)
   .then(() => console.log("✅ Conectado ao MongoDB Atlas com sucesso!"))
   .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err));
@@ -60,16 +61,17 @@ app.use('/matches', matchesRouter);
 app.use('/playoffs', playoffsRouter);
 app.use('/tournaments', tournamentsRouter);
 app.use('/registration', registrationRouter);
+app.use('/profile', profileRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
 });
-// const PORT = 3000;
+const PORT = 3000;
 
-// app.listen(PORT, '0.0.0.0', () => {
-//     console.log(`Servidor rodando em todas as interfaces na porta ${PORT}`);
-// });
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor rodando em todas as interfaces na porta ${PORT}`);
+});
 
 // error handler
 app.use(function(err, req, res, next) {

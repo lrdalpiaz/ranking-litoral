@@ -18,6 +18,13 @@ router.post('/login', async (req, res) => {
       const user = await User.findOne({ email: email.toLowerCase().trim() });
       console.log(user);
       
+      if (user.status === 'pending') {
+          return res.status(400).json({ success: false, error: 'Sua conta foi criada com sucesso, mas está aguardando a aprovação do administrador do Litoral Tour.' });
+      }
+      if (user.status === 'rejected') {
+          return res.status(400).json({ success: false, error: 'Seu pedido de cadastro foi recusado pela administração.' });
+      }
+
       if (user && user.password === password) {
           // Salva os dados essenciais na sessão
           console.log("Logou:" + user);

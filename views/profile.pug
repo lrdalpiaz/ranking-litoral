@@ -1,0 +1,115 @@
+extends layout
+
+block content
+  .container.mt-5.mb-5
+    .row.justify-content-center.g-4
+      
+      //- COLUNA 1: DADOS PESSOAIS
+      .col-md-6
+        .card.border-0.shadow-sm.h-100
+          .card-header.bg-success.text-white.py-3
+            h5.mb-0.text-uppercase.fw-bold 👤 Meus Dados Pessoais
+          .card-body.p-4
+            form#profileForm(autocomplete="off")
+              
+              .mb-3
+                label.small.text-uppercase.fw-bold.text-muted.mb-1 Nome Completo (Obrigatório)
+                input#fullName.form-control(type="text" value=user.fullName required style="height: 45px;")
+              
+              .mb-3
+                label.small.text-uppercase.fw-bold.text-muted.mb-1 Apelido (Como quer ser chamado)
+                input#nickname.form-control(type="text" value=user.nickname placeholder="Ex: Guga" style="height: 45px;")
+              
+              .mb-3
+                label.small.text-uppercase.fw-bold.text-muted.mb-1 📱 WhatsApp / Celular (Obrigatório)
+                input#phone.form-control(type="text" value=user.phone placeholder="(XX) XXXXX-XXXX" required style="height: 45px;")
+              
+              .mb-4
+                label.small.text-uppercase.fw-bold.text-muted.mb-1 ✉️ E-mail de Acesso (Obrigatório)
+                input#email.form-control(type="email" value=user.email required placeholder="seu-email@provedor.com" style="height: 45px;")
+
+              button.btn.btn-success.w-100.fw-bold(type="submit" style="height: 45px;")
+                i.bi.bi-check-circle.me-1
+                | Salvar Alterações
+
+      //- COLUNA 2: ALTERAÇÃO DE SENHA
+      .col-md-5
+        .card.border-0.shadow-sm.h-100
+          .card-header.bg-dark.text-white.py-3
+            h5.mb-0.text-uppercase.fw-bold 🔑 Alterar Senha de Acesso
+          .card-body.p-4
+            form#passwordForm(autocomplete="off")
+              
+              .mb-3
+                label.small.text-uppercase.fw-bold.text-muted.mb-1 Senha Atual
+                input#currentPassword.form-control(type="password" required placeholder="Digite sua senha atual" style="height: 45px;")
+              
+              .mb-4
+                label.small.text-uppercase.fw-bold.text-muted.mb-1 Nova Senha (Mínimo 6 caracteres)
+                input#newPassword.form-control(type="password" required placeholder="Digite a nova senha" style="height: 45px;")
+
+              button.btn.btn-dark.w-100.fw-bold(type="submit" style="height: 45px;")
+                i.bi.bi-shield-lock.me-1
+                | Atualizar Minha Senha
+
+  //- SCRIPTS INDEPENDENTES DE CAPTURA E DISPARO
+  script.
+    document.addEventListener('DOMContentLoaded', () => {
+        const phoneInput = document.getElementById('phone');
+        const profileForm = document.getElementById('profileForm');
+        const passwordForm = document.getElementById('passwordForm');
+
+        // Máscara de Telefone em Tempo Real
+        phoneInput.addEventListener('input', (e) => {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x ? x : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+
+        // ENVIO DO FORMULÁRIO DE DADOS PESSOAIS
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const bodyData = {
+                fullName: document.getElementById('fullName').value,
+                nickname: document.getElementById('nickname').value,
+                phone: phoneInput.value,
+                email: document.getElementById('email').value
+            };
+
+            const response = await fetch('/profile/update-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bodyData)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+                location.reload();
+            } else {
+                alert("Erro: " + result.error);
+            }
+        });
+
+        // ENVIO DO FORMULÁRIO DE ALTERAÇÃO DE SENHA
+        passwordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const bodyData = {
+                currentPassword: document.getElementById('currentPassword').value,
+                newPassword: document.getElementById('newPassword').value
+            };
+
+            const response = await fetch('/profile/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bodyData)
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message);
+                passwordForm.reset(); // Limpa as caixas de texto de senha
+            } else {
+                alert("Erro ao mudar senha: " + result.error);
+            }
+        });
+    });

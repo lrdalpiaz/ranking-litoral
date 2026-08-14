@@ -1,0 +1,76 @@
+extends layout
+
+block content
+  .container.mt-5.mb-5
+    .row.justify-content-center
+      .col-md-8
+        .d-flex.align-items-center.justify-content-between.mb-4
+          h4.text-uppercase.fw-bold 🛠️ Moderação de Novos Cadastros
+          span.badge.bg-warning.text-dark #{pendingUsers.length} Pendentes
+
+        if pendingUsers && pendingUsers.length > 0
+          each u in pendingUsers
+            .card.mb-3.border-0.shadow-sm(id=`user-card-${u._id}`)
+              .card-body.p-4
+                .row.align-items-center
+                  .col-md-8
+                    h5.fw-bold.mb-1= u.fullName
+                    if u.nickname
+                      p.small.text-muted.mb-2 Apelido: 
+                        span.fw-bold.text-dark= u.nickname
+                    div.small.text-secondary
+                      span.me-3 📱 Tel: #{u.phone}
+                      span ✉️ E-mail: #{u.email}
+                  
+                  .col-md-4.text-end.mt-3.mt-md-0
+                    .d-flex.gap-2.justify-content-md-end
+                      button.btn.btn-sm.btn-success.fw-bold(
+                        onclick=`moderateUser("${u._id}", "approve")`
+                      ) Aceitar
+                      
+                      button.btn.btn-sm.btn-outline-danger(
+                        onclick=`moderateUser("${u._id}", "reject")`
+                      ) Recusar
+        else
+          .card.border-0.shadow-sm.text-center.p-5
+            .card-body
+              i.bi.bi-check2-circle.text-success.display-4.mb-3
+              h5.text-muted.mb-0 Nenhum novo usuário aguardando aprovação no momento.
+
+  script.
+    async function moderateUser(userId, action) {
+        if (!confirm(`Tem certeza que deseja ${action === 'approve' ? 'ACEITAR' : 'RECUSAR'} este cadastro?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/registration/admin/user-moderation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, action })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Remove o elemento da tela de forma suave
+                const card = document.getElementById(`user-card-${userId}`);
+                if (card) {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        // Se não sobrarem cards, recarrega a página para exibir a mensagem de lista vazia
+                        if (document.querySelectorAll('[id^="user-card-"]').length === 0) {
+                            location.reload();
+                        }
+                    }, 300);
+                }
+            } else {
+                alert("Erro: " + result.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erro de comunicação com o servidor.");
+        }
+    }
