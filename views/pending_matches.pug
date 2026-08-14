@@ -87,7 +87,7 @@ block content
 
                     //- JOGADOR 1
                     .col-12.col-md-3.mb-2.mb-md-0.d-flex.align-items-center.justify-content-center.gap-1
-                      span.fw-bold.text-uppercase.small= match.player1
+                      span.fw-bold.text-uppercase.small= match.player1Id.name
 
                       if match.player1Id && match.player1Id.phone
                         - var cleanPhone1 = match.player1Id.phone.replace(/\D/g, '')
@@ -113,7 +113,7 @@ block content
 
                     //- JOGADOR 2
                     .col-12.col-md-3.mt-2.mt-md-0.d-flex.align-items-center.justify-content-center.gap-1
-                      span.fw-bold.text-uppercase.small= match.player2
+                      span.fw-bold.text-uppercase.small= match.player2Id.name
 
                       if match.player2Id && match.player2Id.phone
                         - var cleanPhone2 = match.player2Id.phone.replace(/\D/g, '')
@@ -129,8 +129,9 @@ block content
                 //- Ação
                 .col-md-2.text-end(id=`action-container-${match._id}`)
                   //- (Botão de edit/score que já tínhamos)
-                  - var userEmail = user ? user.email : null
-                  - var canEdit = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email)
+                  //- - var userEmail = user ? user.email : null
+                  - var canEdit = user && (user.role === 'admin')
+                  //- - var canEdit = user && (user.role === 'admin' || userEmail === match.player1Id.email || userEmail === match.player2Id.email)
   
     
                   if canEdit
@@ -355,8 +356,9 @@ block content
             }
     
             // Lógica de Permissão de Edição
-            const userEmail = user ? user.email : null;
-            const canEdit = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email);
+            //- const userEmail = user ? user.email : null;
+            //- const canEdit = user && (user.role === 'admin' || userEmail === match.player1Id.email || userEmail === match.player2Id.email);
+            const canEdit = user && (user.role === 'admin');
             const delay = (index % 5) * 50;
             const scoreHtml = match.played
             ? `<div class="d-flex justify-content-center gap-1">
@@ -368,13 +370,13 @@ block content
                </div>`
             : `<span class="text-muted">vs</span>`;
             const p1Phone = match.player1Id && match.player1Id.phone ? match.player1Id.phone.replace(/\D/g, '') : null;
-            const p1Name = match.player1Id ? (match.player1Id.nickname || match.player1Id.name) : match.player1;
+            const p1Name = match.player1Id ? (match.player1Id.nickname || match.player1Id.name) : "";
             const linkP1 = p1Phone
                 ? `<a href="https://wa.me/55${p1Phone}?text=Olá%20${encodeURIComponent(p1Name)},%20sou%20seu%20adversário%20no%20Litoral%20Tour.%20Vamos%20agendar%20nosso%20jogo?" target="_blank" title="Chamar no WhatsApp" style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;" onclick="event.stopPropagation();">📞</a>`
                 : '';
 
             const p2Phone = match.player2Id && match.player2Id.phone ? match.player2Id.phone.replace(/\D/g, '') : null;
-            const p2Name = match.player2Id ? (match.player2Id.nickname || match.player2Id.name) : match.player2;
+            const p2Name = match.player2Id ? (match.player2Id.nickname || match.player2Id.name) : "";
             const linkP2 = p2Phone
                 ? `<a href="https://wa.me/55${p2Phone}?text=Olá%20${encodeURIComponent(p2Name)},%20sou%20seu%20adversário%20no%20Litoral%20Tour.%20Vamos%20agendar%20nosso%20jogo?" target="_blank" title="Chamar no WhatsApp" style="cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-left: 4px; display: inline-flex; position: relative; z-index: 999;" onclick="event.stopPropagation();">📞</a>`
                 : '';
@@ -397,7 +399,7 @@ block content
 
                           <!-- JOGADOR 1: Adicionado alinhamento d-flex e variável do link -->
                           <div class="col-12 col-md-3 mb-2 mb-md-0 d-flex align-items-center justify-content-center gap-1">
-                            <span class="fw-bold text-uppercase small">${match.player1}</span>
+                            <span class="fw-bold text-uppercase small">${match.player1Id.name}</span>
                             ${linkP1}
                           </div>
 
@@ -407,7 +409,7 @@ block content
 
                           <!-- JOGADOR 2: Adicionado alinhamento d-flex e variável do link -->
                           <div class="col-12 col-md-3 mt-2 mt-md-0 d-flex align-items-center justify-content-center gap-1">
-                            <span class="fw-bold text-uppercase small">${match.player2}</span>
+                            <span class="fw-bold text-uppercase small">${match.player2Id.name}</span>
                             ${linkP2}
                           </div>
                         </div>

@@ -19,8 +19,8 @@ block content
           //- LINHA DO JOGADOR 1
           .d-flex.align-items-center.justify-content-between.py-1
             .d-flex.align-items-center.gap-2.flex-grow-1.min-width-0
-              if match.player1 && match.player1 !== ""
-                span.small.text-truncate(class=(match.played && ((match.set1.p1 > match.set1.p2 && match.set2.p1 > match.set2.p2) || (match.set3 && match.set3.p1 > match.set3.p2)) ? 'fw-bold text-success' : 'fw-semibold'))= match.player1
+              if match.player1Id && match.player1Id.name && match.player1Id.name !== ""
+                span.small.text-truncate(class=(match.played && ((match.set1.p1 > match.set1.p2 && match.set2.p1 > match.set2.p2) || (match.set3 && match.set3.p1 > match.set3.p2)) ? 'fw-bold text-success' : 'fw-semibold'))= match.player1Id.name
               else if match.playoffStage === 'semifinal'
                 i.bi.bi-hourglass-split.text-muted.small
                 span.small.text-muted.fst-italic= match.playoffKey === 'S1' ? 'Vencedor de Q1' : 'Vencedor de Q3'
@@ -50,8 +50,8 @@ block content
           //- LINHA DO JOGADOR 2
           .d-flex.align-items-center.justify-content-between.py-1
             .d-flex.align-items-center.gap-2.flex-grow-1.min-width-0
-              if match.player2 && match.player2 !== ""
-                span.small.text-truncate(class=(match.played && ((match.set1.p2 > match.set1.p1 && match.set2.p2 > match.set2.p1) || (match.set3 && match.set3.p2 > match.set3.p1)) ? 'fw-bold text-success' : 'fw-semibold'))= match.player2
+              if match.player2Id && match.player2Id.name && match.player2Id.name !== ""
+                span.small.text-truncate(class=(match.played && ((match.set1.p2 > match.set1.p1 && match.set2.p2 > match.set2.p1) || (match.set3 && match.set3.p2 > match.set3.p1)) ? 'fw-bold text-success' : 'fw-semibold'))= match.player2Id.name
               else if match.playoffStage === 'semifinal'
                 i.bi.bi-hourglass-split.text-muted.small
                 span.small.text-muted.fst-italic= match.playoffKey === 'S1' ? 'Vencedor de Q2' : 'Vencedor de Q4'
@@ -77,8 +77,8 @@ block content
 
         //- Botão de Lançamento de Placar
         - var userEmail = user ? user.email : null
-        - var canEditPlayoff = user && (user.role === 'admin' || userEmail === match.player1Email || userEmail === match.player2Email)
-        if canEditPlayoff && match.player1 && match.player2 && match.player1 !== "" && match.player2 !== ""
+        - var canEditPlayoff = user && (user.role === 'admin')
+        if canEditPlayoff && match.player1Id && match.player2Id && match.player1Id.name && match.player2Id.name && match.player1Id.name !== "" && match.player2Id.name !== ""
           .px-2.pb-2.text-end
             a.btn.btn-xs.btn-outline-success.w-100.d-flex.align-items-center.justify-content-center.fw-bold(
               href=`/matches/score/${match._id}` 

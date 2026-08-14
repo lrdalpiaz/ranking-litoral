@@ -58,7 +58,7 @@ block content
                   .row.align-items-center.text-center.g-0
                     //- Jogador 1
                     .col-12.col-md-3.text-center.text-md-end.pe-md-3.mb-2.mb-md-0
-                      span.fw-bold.small.text-uppercase(style="font-size: 0.85rem;")= match.player1
+                      span.fw-bold.small.text-uppercase(style="font-size: 0.85rem;")= match.player1Id.name
                     
                     //- Inputs Adaptados para Banco de Dados e Simulação
                     .col-12.col-md-6
@@ -83,7 +83,7 @@ block content
                     
                     //- Jogador 2
                     .col-12.col-md-3.text-center.text-md-start.ps-md-3.mt-2.mt-md-0
-                      span.fw-bold.small.text-uppercase(style="font-size: 0.85rem;")= match.player2
+                      span.fw-bold.small.text-uppercase(style="font-size: 0.85rem;")= match.player2Id.name
           else
             .text-center.py-5.text-muted Nenhuma partida configurada para este grupo.
 
@@ -103,6 +103,7 @@ block content
                           .d-inline-block(style="width: 20px; margin-right: 0.5rem; flex-shrink: 0;")
                           span Atleta
                       th.text-center Pts
+                      th.text-center J
                       th.text-center V
                       th.text-center S
                       th.text-center G
@@ -112,7 +113,7 @@ block content
   //- MOTOR DE CÁLCULO E EVENTOS
   script.
     window.initialMatches = !{JSON.stringify(matches || [])};
-    window.players = [...new Set(window.initialMatches.flatMap(m => [m.player1, m.player2]))].filter(Boolean);
+    window.players = [...new Set(window.initialMatches.flatMap(m => [m.player1Id, m.player2Id]))].filter(Boolean);
   
   //- Carrega os scripts externos sem risco de quebras sintáticas do Pug
   script(src="/javascripts/simulator.js")

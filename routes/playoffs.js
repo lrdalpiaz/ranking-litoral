@@ -13,11 +13,17 @@ router.post('/lock-groups/:tournamentId', async (req, res) => {
         const { tournamentId } = req.params;
         
         // 1. Busca todos os jogos do torneio para calcular as classificações reais
-        const allMatches = await Match.find({ tournamentId }).lean();
-        
+        const allMatches = await Match.find({ tournamentId })
+            .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+            .populate('player2Id')
+            .lean();
+        console.log("All matches:", allMatches);
         // 2. Busca todas as estruturas de playoffs criadas que ainda não foram jogadas
-        const playoffMatches = await Match.find({ tournamentId, isPlayoff: true, played: false });
+        const playoffMatches = await Match.find({ tournamentId, isPlayoff: true, played: false })
+            .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+            .populate('player2Id');
 
+        console.log("Playoff matches:", playoffMatches);
         // Mapeamos os classificados por [Classe][Grupo] = [1º colocado, 2º colocado]
         const standingsCache = {};
 
@@ -28,8 +34,9 @@ router.post('/lock-groups/:tournamentId', async (req, res) => {
             if (src1 && src1.class) {
                 const p1 = await getPlayerFromStanding(allMatches, src1.class, src1.groupNumber, src1.position);
                 if (p1) {
-                    pm.player1 = p1.name;
-                    pm.player1Email = p1.email;
+                    pm.player1Id = p1.player;
+                    // pm.player1 = p1.name;
+                    // pm.player1Email = p1.email;
                 }
             }
 
@@ -38,11 +45,13 @@ router.post('/lock-groups/:tournamentId', async (req, res) => {
             if (src2 && src2.class) {
                 const p2 = await getPlayerFromStanding(allMatches, src2.class, src2.groupNumber, src2.position);
                 if (p2) {
-                    pm.player2 = p2.name;
-                    pm.player2Email = p2.email;
+                    pm.player2Id = p2.player;
+                    // pm.player2 = p2.name;
+                    // pm.player2Email = p2.email;
                 }
             }
 
+            console.log("Saving playoff matche:", pm);
             // Salva a partida atualizada com os nomes reais no MongoDB
             await pm.save();
         }
@@ -66,7 +75,7 @@ async function getPlayerFromStanding(allMatches, className, groupNumber, positio
         // 2. Calcula a tabela de cada grupo e captura exclusivamente quem ficou em 3º lugar
         groupNumbers.forEach(grpNum => {
             const groupMatches = classMatches.filter(m => m.groupNumber === grpNum);
-            const playersInGroup = [...new Set(groupMatches.flatMap(m => [m.player1, m.player2]))].filter(Boolean);
+            const playersInGroup = [...new Set(groupMatches.flatMap(m => [m.player1Id, m.player2Id]))].filter(Boolean);
             const standing = calculateStanding(playersInGroup, groupMatches);
             
             // Se o grupo tiver pelo menos 3 jogadores, captura o 3º colocado (index 2)
@@ -84,26 +93,27 @@ async function getPlayerFromStanding(allMatches, className, groupNumber, positio
             return (b.gFav - b.gAg) - (a.gFav - a.gAg);
         });
 
+        console.log("All third places:", allThirdPlacePlayers);
         // 4. Extrai o melhor (index 0 para código 101) ou o segundo melhor (index 1 para código 102)
         const targetIndex = position === 101 ? 0 : 1;
         const athlete = allThirdPlacePlayers[targetIndex];
 
         if (athlete) {
-            const user = await User.findOne({ name: athlete.name }).lean();
-            return { name: athlete.name, email: user ? user.email : 'player@null.com' };
+            const user = await User.findOne({ email: athlete.email }).lean();
+            return {player: user};
         }
         return null;
     }
 
     // CASO REGULAR: Busca o 1º, 2º ou 3º fixo de um grupo específico (Lógica que você já tem)
     const groupMatches = allMatches.filter(m => m.className === className && m.groupNumber === groupNumber);
-    const playersInGroup = [...new Set(groupMatches.flatMap(m => [m.player1, m.player2]))].filter(Boolean);
+    const playersInGroup = [...new Set(groupMatches.flatMap(m => [m.player1Id, m.player2Id]))].filter(Boolean);
     const standing = calculateStanding(playersInGroup, groupMatches);
     
     const athlete = standing[position - 1];
     if (athlete) {
-        const user = await User.findOne({ name: athlete.name }).lean();
-        return { name: athlete.name, email: user ? user.email : 'player@null.com' };
+        const user = await User.findOne({ email: athlete.email }).lean();
+        return {player: user};
     }
     return null;
 }
@@ -122,7 +132,10 @@ router.get('/admin', async (req, res) => {
             tournamentId: selectedTournament, 
             className: selectedClass,
             isPlayoff: { $ne: true }
-        }).lean();
+        })
+        .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+        .populate('player2Id')
+        .lean();
 
         const activeGroups = [...new Set(
             classMatches.map(m => parseInt(m.groupNumber)).filter(g => !isNaN(g) && g > 0)
@@ -162,10 +175,10 @@ router.post('/create', async (req, res) => {
             player1Source: { class: className, groupNumber: parseInt(p1Group), position: parseInt(p1Pos) },
             player2Source: { class: className, groupNumber: parseInt(p2Group), position: parseInt(p2Pos) },
             // Inicialmente sem nomes, até o fechamento da fase de grupos
-            player1: null,
-            player1Email: null,
-            player2: null,
-            player2Email: null
+            // player1: null,
+            // player1Email: null,
+            // player2: null,
+            // player2Email: null
         });
 
         res.redirect(`/playoffs/matches?tournamentId=${tournamentId}&class=${className}`);
@@ -222,19 +235,19 @@ router.post('/setup-bracket', async (req, res) => {
                 player1Source: { class: className, groupNumber: g1, position: pos1 },
                 player2Source: { class: className, groupNumber: g2, position: pos2 },
                 // Enviamos strings vazias explicitamente para passar pela validação antiga se necessário
-                player1: "", 
-                player1Email: "", 
-                player2: "", 
-                player2Email: ""
+                // player1: "",
+                // player1Email: "",
+                // player2: "",
+                // player2Email: ""
             });
         }
 
         // 3. Cria os esqueletos das Semifinais (S1 e S2) vazios
-        await Match.create({ tournamentId, className, isPlayoff: true, playoffStage: 'semifinal', playoffKey: 'S1', nextPlayoffKey: 'F1', nextPlayoffSlot: 'player1', played: false, player1: "", player1Email: "", player2: "", player2Email: "" });
-        await Match.create({ tournamentId, className, isPlayoff: true, playoffStage: 'semifinal', playoffKey: 'S2', nextPlayoffKey: 'F1', nextPlayoffSlot: 'player2', played: false, player1: "", player1Email: "", player2: "", player2Email: "" });
+        await Match.create({ tournamentId, className, isPlayoff: true, playoffStage: 'semifinal', playoffKey: 'S1', nextPlayoffKey: 'F1', nextPlayoffSlot: 'player1', played: false});
+        await Match.create({ tournamentId, className, isPlayoff: true, playoffStage: 'semifinal', playoffKey: 'S2', nextPlayoffKey: 'F1', nextPlayoffSlot: 'player2', played: false});
 
         // 4. Cria o esqueleto da Grande Final (F1) vazio
-        await Match.create({ tournamentId, className, isPlayoff: true, playoffStage: 'final', playoffKey: 'F1', played: false, player1: "", player1Email: "", player2: "", player2Email: "" });
+        await Match.create({ tournamentId, className, isPlayoff: true, playoffStage: 'final', playoffKey: 'F1', played: false});
 
         res.redirect(`/playoffs/matches?tournamentId=${tournamentId}&class=${className}`);
     } catch (err) {
@@ -257,7 +270,10 @@ router.get('/matches', async (req, res) => {
             tournamentId: selectedTournament,
             className: selectedClass,
             isPlayoff: true
-        }).lean();
+        })
+        .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+        .populate('player2Id')
+        .lean();
 
         const stages = {
             quartas: playoffMatches.filter(m => m.playoffStage === 'quartas'),

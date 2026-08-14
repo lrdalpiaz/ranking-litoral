@@ -1,7 +1,7 @@
 const calculateStanding = (players, matches) => {
     const stats = {};
     players.forEach(p => {
-        stats[p] = { name: p, points: 0, matches: 0, wins: 0, sWon: 0, sLost: 0, gFav: 0, gAg: 0 };
+        stats[p.email] = { name: p.name, email: p.email, points: 0, matches: 0, wins: 0, sWon: 0, sLost: 0, gFav: 0, gAg: 0 };
     });
 
     // Filtra apenas jogos que tenham algum resultado
@@ -13,7 +13,8 @@ const calculateStanding = (players, matches) => {
     });
 
     playedMatches.forEach(m => {
-        const { player1: p1, player2: p2 } = m;
+        // user email
+        const { player1Id: { email: p1 }, player2Id: { email: p2 } } = m;
         
         // Normalização dos valores para garantir que sejam números
         const s1p1 = parseInt(m.set1 ? m.set1.p1 : m.s1p1) || 0;
@@ -52,16 +53,19 @@ const calculateStanding = (players, matches) => {
     return Object.values(stats).sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
 
-        const tiedNames = Object.values(stats).filter(p => p.points === a.points).map(p => p.name);
+        // usar email
+        const tiedEmails = Object.values(stats).filter(p => p.points === a.points).map(p => p.email);
 
-        console.log(tiedNames);
+        console.log(tiedEmails);
         // SITUAÇÃO 1: Empate entre 2 (Confronto Direto)
-        if (tiedNames.length === 2) {
-            const m = playedMatches.find(m => (tiedNames.includes(m.player1) && tiedNames.includes(m.player2)));
+        if (tiedEmails.length === 2) {
+            // usar email
+            const m = playedMatches.find(m => (tiedEmails.includes(m.player1Id.email) && tiedEmails.includes(m.player2Id.email)));
             if (m) {
                 console.log("Empate:", m);
                 const p1Win = (parseInt(m.set1.p1) > parseInt(m.set1.p2) && parseInt(m.set2.p1) > parseInt(m.set2.p2)) || parseInt(m.set3.p1) > parseInt(m.set3.p2);
-                const winner = p1Win ? m.player1 : m.player2;
+                // user email
+                const winner = p1Win ? m.player1Id.email : m.player2Id.email;
                 return winner === a.name ? -1 : 1;
             }
         }
@@ -74,9 +78,10 @@ const calculateStanding = (players, matches) => {
         const miniLeague = (player) => {
             let p = 0;
             playedMatches.forEach(m => {
-                if (tiedNames.includes(m.player1) && tiedNames.includes(m.player2)) {
-                    if (m.player1 === player.name || m.player2 === player.name) {
-                        const isP1 = m.player1 === player.name;
+                // usar email
+                if (tiedEmails.includes(m.player1Id.email) && tiedEmails.includes(m.player2Id.email)) {
+                    if (m.player1Id.email === player.email || m.player2Id.email === player.email) {
+                        const isP1 = m.player1Id.email === player.email;
                         const p1W = (parseInt(m.set1.p1) > parseInt(m.set1.p2) && parseInt(m.set2.p1) > parseInt(m.set2.p2)) || parseInt(m.set3.p1) > parseInt(m.set3.p2);
                         const won = isP1 ? p1W : !p1W;
                         const tb = (parseInt(m.set3.p1) || 0) + (parseInt(m.set3.p2) || 0) > 0;

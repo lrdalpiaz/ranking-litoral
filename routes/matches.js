@@ -67,7 +67,9 @@ router.get('/admin/export-week/:round', async (req, res) => {
             tournamentId: tournamentId,
             isPlayoff: false // 👈 Evita misturar jogos de mata-mata aqui
         })
-        .sort({ className: 1, player1: 1 })
+        .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+        .populate('player2Id')
+        .sort({ className: 1, groupNumber: 1, player1: 1 })
         .lean();
 
         // Agrupa os confrontos por Classe dentro de um objeto mapeado
@@ -100,8 +102,8 @@ router.get('/admin/export-week/:round', async (req, res) => {
             }
 
             bulletinData[className].push({
-                p1: match.player1,
-                p2: match.player2,
+                p1: match.player1Id.name,
+                p2: match.player2Id.name,
                 score: scoreText
             });
         });
@@ -143,7 +145,10 @@ router.get('/filter', async (req, res) => {
 // Abre o formulário de placar para um jogo específico
 router.get('/score/:id', async (req, res) => {
     try {
-        const match = await Match.findById(req.params.id).lean();
+        const match = await Match.findById(req.params.id)
+                .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+                .populate('player2Id')
+                .lean();
         if (!match) return res.status(404).send("Match not found");
 
         res.render('update-match', { match });
@@ -187,21 +192,25 @@ router.post('/update/:id', async (req, res) => {
 
             // Verifica vitória direta por 2-0 ou decisão por Super Tie-break no 3º set
             if (setsP1 === 2 || (setsP1 === 1 && setsP2 === 1 && s3p1 > s3p2)) {
-                winnerName = match.player1;
-                winnerEmail = match.player1Email;
+                // winnerName = match.player1Id.name;
+                // winnerEmail = match.player1Id.email;
+                winnerId = match.player1Id;
             } else {
-                winnerName = match.player2;
-                winnerEmail = match.player2Email;
+                // winnerName = match.player2Id.name;
+                // winnerEmail = match.player2.email;
+                winnerId = match.player2Id;
             }
 
             // Prepara a query dinâmica para injetar no slot correto (player1 ou player2) da próxima fase
             const updateNextStageQuery = {};
             if (match.nextPlayoffSlot === 'player1') {
-                updateNextStageQuery.player1 = winnerName;
-                updateNextStageQuery.player1Email = winnerEmail;
+                // updateNextStageQuery.player1 = winnerName;
+                // updateNextStageQuery.player1Email = winnerEmail;
+                updateNextStageQuery.player1Id = winnerId;
             } else {
-                updateNextStageQuery.player2 = winnerName;
-                updateNextStageQuery.player2Email = winnerEmail;
+                // updateNextStageQuery.player2 = winnerName;
+                // updateNextStageQuery.player2Email = winnerEmail;
+                updateNextStageQuery.player2Id = winnerId;
             }
 
             // Atualiza o próximo jogo da árvore (Ex: se completou Q1, atualiza S1)
@@ -242,7 +251,10 @@ router.get('/ranking', async (req, res) => {
         const selectedTournament = req.query.tournamentId || (tournaments.length > 0 ? tournaments[0]._id.toString() : null);
 
         // 2. Busca apenas as partidas vinculadas ao torneio selecionado (sempre com .lean())
-        const allMatches = await Match.find({ tournamentId: selectedTournament }).lean();
+        const allMatches = await Match.find({ tournamentId: selectedTournament })
+            .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+            .populate('player2Id')
+            .lean();
         const tournamentData = {};
 
         // 3. Organiza as partidas por Classe e depois por Grupo
@@ -264,7 +276,7 @@ router.get('/ranking', async (req, res) => {
                 
                 // Extrai atletas únicos filtrando valores nulos, vazios ou folgas (BYE)
                 const playersInGroup = [...new Set(
-                    matchesOfGroup.flatMap(m => [m.player1, m.player2])
+                    matchesOfGroup.flatMap(m => [m.player1Id, m.player2Id])
                 )].filter(name => name && name !== "BYE" && name !== "FOLGA");
                 
                 // Executa o motor de cálculo apenas se houver jogadores no grupo

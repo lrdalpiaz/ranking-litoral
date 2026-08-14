@@ -4,10 +4,10 @@ const matchSchema = new mongoose.Schema({
   tournamentId: mongoose.Schema.Types.ObjectId,
   className: String, // 'A', 'B', etc.
   groupNumber: Number, // 1, 2, 3...
-  player1: { type: String, required: false, default: null },
-  player1Email: { type: String, required: false, default: null },
-  player2: { type: String, required: false, default: null },
-  player2Email: { type: String, required: false, default: null },
+  // player1: { type: String, required: false, default: null },
+  // player1Email: { type: String, required: false, default: null },
+  // player2: { type: String, required: false, default: null },
+  // player2Email: { type: String, required: false, default: null },
 
   player1Id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   player2Id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

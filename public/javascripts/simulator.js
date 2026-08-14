@@ -47,8 +47,12 @@ function updateSimulation() {
       // Se o jogo já foi jogado na realidade, retornamos a estrutura original do banco intacta
       if (m.played) {
         return {
-          player1: m.player1,
-          player2: m.player2,
+          // player1: m.player1Id.name,
+          // player2: m.player2Id.name,
+          // player1Email: m.player1Id.email,
+          // player2Email: m.player2Id.email,
+          player1Id: m.player1Id,
+          player2Id: m.player2Id,
           className: m.className,
           groupNumber: m.groupNumber,
           set1: { p1: parseInt(m.set1?.p1) || 0, p2: parseInt(m.set1?.p2) || 0 },
@@ -66,8 +70,12 @@ function updateSimulation() {
       const s3p2In = document.querySelector(`[data-match="${i}"][data-set="3"][data-player="p2"]`);
 
       return {
-        player1: m.player1,
-        player2: m.player2,
+        // player1: m.player1Id.name,
+        // player2: m.player2Id.name,
+        // player1Email: m.player1Id.email,
+        // player2Email: m.player2Id.email,
+        player1Id: m.player1Id,
+        player2Id: m.player2Id,
         className: m.className,
         groupNumber: m.groupNumber,
         set1: {
@@ -104,6 +112,7 @@ function updateSimulation() {
         <td class="text-center align-middle fw-bold table-primary" style="background-color: rgba(13, 110, 253, 0.08) !important; color: #0a58ca !important;">
           ${p.points}
         </td>
+        <td class="text-center align-middle">${p.matches}</td>
         <td class="text-center align-middle">${p.wins}</td>
         <td class="text-center align-middle ${p.sWon - p.sLost > 0 ? 'text-success fw-bold' : (p.sWon - p.sLost < 0 ? 'text-danger' : '')}">
           ${p.sWon - p.sLost > 0 ? '+' : ''}${p.sWon - p.sLost}

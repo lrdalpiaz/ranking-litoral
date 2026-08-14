@@ -15,7 +15,10 @@ try {
         const classMatches = await Match.find({ 
             tournamentId: selectedTournament, 
             className: selectedClass 
-        }).lean();
+        })
+        .populate('player1Id') // 👈 Traz os dados de e-mail, apelido e telefone do Player 1
+        .populate('player2Id')
+        .lean();
 
         // 2. Extrai de forma única quais grupos realmente existem para ESTA classe específica
         const groups = [...new Set(classMatches.map(m => m.groupNumber))].sort((a, b) => a - b);
@@ -27,7 +30,7 @@ try {
         const matches = classMatches.filter(m => m.groupNumber === parseInt(selectedGroup));
 
         // 4. Extrai a lista de jogadores únicos deste grupo específico
-        const players = [...new Set(matches.flatMap(m => [m.player1, m.player2]))]
+        const players = [...new Set(matches.flatMap(m => [m.player1Id, m.player2Id]))]
             .filter(name => name && name !== "BYE" && name !== "FOLGA");
 
         res.render('simulator', { 
