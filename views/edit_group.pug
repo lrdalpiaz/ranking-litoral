@@ -1,0 +1,123 @@
+extends layout
+
+block content
+  .container.mt-5.mb-5
+    .row.justify-content-center
+      .col-md-8
+        hd.text-uppercase.fw-bold.mb-4 🔄 Substituição de Atletas nos Grupos
+
+        //- BARRA DE FILTROS PADRONIZADA
+        .card.mb-4.border-0.shadow-sm
+          .card-body.bg-white
+            .row.g-3.align-items-end
+              .col-md-5
+                label.small.text-uppercase.fw-bold.text-muted.mb-1 🏆 Selecione o Torneio
+                select#tournamentSelect.form-select.border-success(style="height: 38px;" onchange="updateGroupFilter()")
+                  each t in tournaments
+                    option(value=t._id.toString() selected=(t._id.toString() === selectedTournament))= t.name
+
+              .col-md-7
+                label.small.text-uppercase.fw-bold.text-muted.mb-1 🎾 Categoria / Classe
+                ul.nav.nav-pills#classTabs(style="height: 38px; display: flex; gap: 0px; border-radius: 6px; overflow: hidden; background-color: #f8f9fa; border: 1px solid #dee2e6;")
+                  each cls in ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+                    li(style="flex: 1; display: flex;")
+                      button.nav-link.w-100.h-100.d-flex.align-items-center.justify-content-center(
+                        class=(selectedClass === cls ? 'active bg-success text-white' : 'text-success')
+                        type="button"
+                        onclick=`changeClassFilter("${cls}")`
+                        style="font-size: 0.85rem; padding: 0; border-radius: 0px;"
+                      )= cls
+
+        //- FORMULÁRIO CENTRALIZADO DE TROCA DE ATLETAS
+        .card.border-0.shadow-sm
+          .card-header.bg-dark.text-white.py-3
+            h6.mb-0.text-uppercase.fw-bold Painel de Substituição — Classe #{selectedClass}
+          .card-body.p-4
+            if currentPlayers && currentPlayers.length > 0
+              form#substitutionForm(onsubmit="executeSubstitution(event)")
+
+                //- SELETOR 1: QUEM VAI SAIR DO GRUPO
+                .mb-4
+                  label.small.text-uppercase.fw-bold.text-muted.mb-1 ❌ 1. Selecione o Jogador que vai SAIR desta classe
+                  select#oldPlayerSelect.form-select.border-danger(required style="height: 45px;")
+                    option(value="" disabled selected) Escolha o atleta atual...
+                    each player in currentPlayers
+                      option(value=player._id.toString())= player.name + (player.nickname ? ` (${player.nickname})` : '')
+                  .form-text.text-muted Este dropdown lista apenas os atletas que possuem jogos agendados nesta classe.
+
+                //- SELETOR 2: QUEM VAI ENTRAR NO GRUPO
+                .mb-4
+                  label.small.text-uppercase.fw-bold.text-muted.mb-1.text-success 🔄 2. Selecione o Jogador SUBSTITUTO (Quem vai entrar)
+                  select#newPlayerSelect.form-select.border-success(required style="height: 45px;")
+                    option(value="" disabled selected) Escolha o novo atleta...
+                    each sub in allPlayers
+                      option(value=sub._id.toString())= sub.name + (sub.nickname ? ` (${sub.nickname})` : '')
+                  .form-text.text-muted Lista geral de todos os atletas ativos cadastrados na plataforma.
+
+                //- BOTÃO DE DISPARO
+                .mt-4
+                  button.btn.btn-warning.w-100.fw-bold.text-uppercase(type="submit" style="height: 45px;")
+                    i.bi.bi-arrow-left-right.me-2
+                    | Confirmar Substituição em Massa
+
+            else
+              .text-center.py-4
+                i.bi.bi-exclamation-triangle.text-warning.fs-3.mb-2.d-block
+                p.text-muted.mb-0 Nenhum confronto ou atleta localizado para este Torneio e Classe.
+
+  script.
+    const currentTournament = "#{selectedTournament}";
+    let currentClass = "#{selectedClass}";
+
+    function updateGroupFilter() {
+        const tId = document.getElementById('tournamentSelect').value;
+        location.href = `/group/admin/edit?tournamentId=${tId}&class=${currentClass}`;
+    }
+
+    function changeClassFilter(cls) {
+        const tId = document.getElementById('tournamentSelect').value;
+        location.href = `/group/admin/edit?tournamentId=${tId}&class=${cls}`;
+    }
+
+    async function executeSubstitution(event) {
+        event.preventDefault(); // Impede o recarregamento padrão da página
+
+        const oldPlayerId = document.getElementById('oldPlayerSelect').value;
+        const newPlayerId = document.getElementById('newPlayerSelect').value;
+
+        if (oldPlayerId === newPlayerId) {
+            alert("Erro: Você não pode substituir um jogador por ele mesmo! Selecione atletas diferentes.");
+            return;
+        }
+
+        if (!confirm("Atenção máxima! Esta ação irá alterar todas as partidas PENDENTES do jogador antigo nesta classe para o nome do novo jogador. Deseja aplicar prosseguir?")) {
+            return;
+        }
+
+        const bodyData = {
+            tournamentId: currentTournament,
+            className: currentClass,
+            oldPlayerId: oldPlayerId,
+            newPlayerId: newPlayerId
+        };
+
+        try {
+            const response = await fetch('/group/admin/substitute-player', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bodyData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message);
+                location.reload(); // Atualiza a página para recomputar as novas listas dos dropdowns
+            } else {
+                alert("Erro ao substituir: " + result.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erro técnico de rede ao tentar se comunicar com o servidor.");
+        }
+    }

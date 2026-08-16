@@ -15,6 +15,7 @@ var playoffsRouter = require('./routes/playoffs');
 var tournamentsRouter = require('./routes/tournaments');
 var registrationRouter = require('./routes/registration');
 var profileRouter = require('./routes/profile');
+var groupRouter = require('./routes/group');
 var app = express();
 
 const mongoURI = process.env.MONGODB_URI || "mongodb+srv://lrdalpiaz:jp9N3bnaeTg4cr6c@cluster0.lgxrw0w.mongodb.net/ranking_test?appName=Cluster0";
@@ -62,6 +63,7 @@ app.use('/playoffs', playoffsRouter);
 app.use('/tournaments', tournamentsRouter);
 app.use('/registration', registrationRouter);
 app.use('/profile', profileRouter);
+app.use('/group', groupRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
